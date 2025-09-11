@@ -1,4 +1,4 @@
-<!-- templates/peticiones/lista_peticiones.html -->
+<!-- templates/peticiones/lista_peticiones.html - ARCHIVO COMPLETO CORREGIDO -->
 {% extends 'base.html' %}
 
 {% block title %}Lista de Peticiones - Sistema de Peticiones IA{% endblock %}
@@ -133,6 +133,13 @@
                                             <i class="fas fa-file-pdf"></i>
                                         </a>
                                     {% endif %}
+                                    {% if peticion.transcripcion_completa %}
+                                        <button class="btn btn-sm btn-outline-info" 
+                                                onclick="iniciarAsistenteIA('{{ peticion.radicado }}')"
+                                                title="Asistente IA para Respuesta">
+                                            <i class="fas fa-robot"></i>
+                                        </button>
+                                    {% endif %}
                                     {% if peticion.estado == 'sin_responder' %}
                                         <button class="btn btn-sm btn-outline-success" 
                                                 onclick="cambiarEstado('{{ peticion.radicado }}', 'respondido')"
@@ -225,6 +232,57 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para Editar Peticionario -->
+<div class="modal fade" id="editarPeticionarioModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Datos del Peticionario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditarPeticionario">
+                <div class="modal-body">
+                    <div id="editErrors" class="alert alert-danger d-none"></div>
+                    
+                    <p><strong>Radicado:</strong> <span id="modalRadicadoEdit"></span></p>
+                    
+                    <div class="mb-3">
+                        <label for="edit_nombre" class="form-label">Nombre Completo</label>
+                        <input type="text" class="form-control" id="edit_nombre" name="peticionario_nombre">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_documento" class="form-label">Documento</label>
+                            <input type="text" class="form-control" id="edit_documento" name="peticionario_id">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_telefono" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="edit_telefono" name="peticionario_telefono">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_correo" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="edit_correo" name="peticionario_correo">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_direccion" class="form-label">Dirección</label>
+                        <textarea class="form-control" id="edit_direccion" name="peticionario_direccion" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarPeticionario">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -240,6 +298,41 @@ function cambiarEstado(radicado, nuevoEstado) {
     
     const modal = new bootstrap.Modal(document.getElementById('cambiarEstadoModal'));
     modal.show();
+}
+
+function iniciarAsistenteIA(radicado) {
+    // Mostrar loading
+    const btn = event.target.closest('button');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    // Llamar al servicio de IA
+    fetch(`/peticion/${radicado}/asistente/iniciar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirigir a la página del asistente
+            window.location.href = `/peticion/${radicado}/asistente/`;
+        } else {
+            alert('Error: ' + (data.error || 'No se pudo iniciar el asistente'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al iniciar el asistente IA');
+    })
+    .finally(() => {
+        // Restaurar botón
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    });
 }
 
 function confirmarCambioEstado() {

@@ -1,4 +1,4 @@
-<!-- templates/peticiones/detalle_peticion.html -->
+<!-- templates/peticiones/detalle_peticion.html - ARCHIVO COMPLETO -->
 {% extends 'base.html' %}
 
 {% block title %}{{ peticion.radicado }} - Detalle Petición{% endblock %}
@@ -162,6 +162,13 @@
                         </a>
                     {% endif %}
                     
+                    {% if peticion.transcripcion_completa %}
+                        <button class="btn btn-outline-info btn-sm" onclick="iniciarAsistenteIA('{{ peticion.radicado }}')" 
+                                id="btnAsistenteIA">
+                            <i class="fas fa-robot"></i> Asistente IA para Respuesta
+                        </button>
+                    {% endif %}
+                    
                     <button class="btn btn-outline-secondary btn-sm" onclick="copiarTranscripcion()">
                         <i class="fas fa-copy"></i> Copiar Transcripción
                     </button>
@@ -230,6 +237,41 @@ function copiarTranscripcion() {
         alert('Transcripción copiada al portapapeles');
     }).catch(err => {
         console.error('Error al copiar:', err);
+    });
+}
+
+function iniciarAsistenteIA(radicado) {
+    // Mostrar loading
+    const btn = document.getElementById('btnAsistenteIA');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando...';
+    btn.disabled = true;
+    
+    // Llamar al servicio de IA
+    fetch(`/peticion/${radicado}/asistente/iniciar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirigir a la página del asistente
+            window.location.href = `/peticion/${radicado}/asistente/`;
+        } else {
+            alert('Error: ' + (data.error || 'No se pudo iniciar el asistente'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al iniciar el asistente IA');
+    })
+    .finally(() => {
+        // Restaurar botón
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
     });
 }
 

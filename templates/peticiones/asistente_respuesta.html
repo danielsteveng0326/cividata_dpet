@@ -1,0 +1,388 @@
+<!-- templates/peticiones/asistente_respuesta.html - CORREGIDO -->
+{% extends 'base.html' %}
+
+{% block title %}Asistente IA - {{ peticion.radicado }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-robot text-info"></i>
+        Asistente IA para Respuesta
+    </h1>
+    <div>
+        <a href="{% url 'detalle_peticion' peticion.radicado %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- Información de la Petición -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt"></i>
+                    Petición: {{ peticion.radicado }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Peticionario:</strong> {{ peticion.peticionario_nombre|default:"Anónimo" }}</p>
+                        <p><strong>Fecha:</strong> {{ peticion.fecha_radicacion|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Estado:</strong> 
+                            {% if peticion.estado == 'sin_responder' %}
+                                <span class="badge bg-warning">{{ peticion.get_estado_display }}</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ peticion.get_estado_display }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Competencia:</strong> 
+                            <span class="badge bg-info">{{ analisis.competencia_municipal|default:"A determinar" }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Análisis IA -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-brain"></i>
+                    Análisis Inteligente del Documento
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>Resumen de la Petición:</h6>
+                        <p class="text-muted">{{ analisis.resumen_peticion }}</p>
+                        
+                        {% if analisis.aspectos_clave %}
+                        <h6>Aspectos Clave Identificados:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for aspecto in analisis.aspectos_clave %}
+                            <li class="list-group-item">
+                                <i class="fas fa-check-circle text-success"></i> {{ aspecto }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            {% if analisis.urgencia == 'alta' %}
+                                <span class="badge bg-danger fs-6 p-3">
+                                    <i class="fas fa-exclamation-triangle"></i> Urgencia Alta
+                                </span>
+                            {% elif analisis.urgencia == 'media' %}
+                                <span class="badge bg-warning fs-6 p-3">
+                                    <i class="fas fa-clock"></i> Urgencia Media
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success fs-6 p-3">
+                                    <i class="fas fa-calendar-alt"></i> Urgencia Baja
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preguntas del Asistente -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-question-circle"></i>
+                    Preguntas para Mejorar la Respuesta
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Instrucciones:</strong> Responde las siguientes preguntas para que el asistente IA pueda generar una respuesta precisa y fundamentada legalmente.
+                </div>
+                
+                <form id="formAsistente">
+                    {% csrf_token %}
+                    {% for pregunta in analisis.preguntas %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-question"></i>
+                                Pregunta {{ forloop.counter }}
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="fw-bold">{{ pregunta.pregunta }}</p>
+                            
+                            {% if pregunta.justificacion %}
+                            <p class="text-muted">
+                                <i class="fas fa-lightbulb"></i>
+                                <em>{{ pregunta.justificacion }}</em>
+                            </p>
+                            {% endif %}
+                            
+                            <!-- Opciones sugeridas si existen -->
+                            {% if pregunta.opciones_sugeridas %}
+                            <div class="mb-3">
+                                <label class="form-label">Opciones sugeridas:</label>
+                                {% for opcion in pregunta.opciones_sugeridas %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" 
+                                           name="pregunta_{{ forloop.parentloop.counter }}_opcion" 
+                                           id="opcion_{{ forloop.parentloop.counter }}_{{ forloop.counter }}"
+                                           value="{{ opcion }}"
+                                           onchange="actualizarRespuestaTexto({{ forloop.parentloop.counter }}, '{{ opcion }}')">
+                                    <label class="form-check-label" for="opcion_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                        {{ opcion }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Campo de respuesta libre -->
+                            <div class="mb-3">
+                                <label for="respuesta_{{ forloop.counter }}" class="form-label">
+                                    Tu respuesta:
+                                </label>
+                                <textarea class="form-control" 
+                                          id="respuesta_{{ forloop.counter }}" 
+                                          name="respuesta_{{ forloop.counter }}"
+                                          rows="3" 
+                                          placeholder="Escribe tu respuesta detallada aquí..."
+                                          required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-success" id="btnGenerar">
+                            <i class="fas fa-magic"></i> Generar Respuesta IA
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Respuesta Generada -->
+<div class="modal fade" id="modalRespuestaGenerada" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle"></i>
+                    Respuesta Generada por IA
+                </h5>
+            </div>
+            <div class="modal-body">
+                <!-- Evaluación de Calidad -->
+                <div id="evaluacionCalidad" class="alert alert-info" style="display: none;">
+                    <h6><i class="fas fa-chart-line"></i> Evaluación de Calidad</h6>
+                    <div class="row">
+                        <div class="col-md-6" id="puntuacionTotal"></div>
+                        <div class="col-md-6" id="recomendacion"></div>
+                    </div>
+                </div>
+                
+                <!-- Respuesta Generada -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Respuesta Sugerida</h6>
+                        <button class="btn btn-sm btn-outline-primary" onclick="copiarRespuesta()">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="respuestaGenerada" style="white-space: pre-wrap; font-family: 'Times New Roman', serif; line-height: 1.6;">
+                            <!-- Aquí se mostrará la respuesta -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información adicional -->
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i>
+                            Generada: <span id="fechaGeneracion"></span>
+                        </small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small class="text-muted">
+                            <i class="fas fa-robot"></i>
+                            Powered by Gemini AI
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="regenerarRespuesta()">
+                    <i class="fas fa-redo"></i> Regenerar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="descargarRespuesta()">
+                    <i class="fas fa-download"></i> Descargar
+                </button>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                    <i class="fas fa-check"></i> Finalizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let respuestasUsuario = [];
+
+function actualizarRespuestaTexto(numeroPregunta, opcionSeleccionada) {
+    const textarea = document.getElementById(`respuesta_${numeroPregunta}`);
+    if (textarea.value.trim() === '') {
+        textarea.value = opcionSeleccionada;
+    }
+}
+
+document.getElementById('formAsistente').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Recopilar respuestas
+    respuestasUsuario = [];
+    const preguntas = {{ analisis.preguntas|safe }};
+    
+    preguntas.forEach((pregunta, index) => {
+        const numeroPregunta = index + 1;
+        const respuesta = document.getElementById(`respuesta_${numeroPregunta}`).value.trim();
+        
+        respuestasUsuario.push({
+            pregunta: pregunta.pregunta,
+            respuesta: respuesta
+        });
+    });
+    
+    // Validar que todas las preguntas tengan respuesta
+    const respuestasVacias = respuestasUsuario.filter(r => r.respuesta === '');
+    if (respuestasVacias.length > 0) {
+        alert('Por favor responde todas las preguntas antes de continuar.');
+        return;
+    }
+    
+    // Mostrar loading en botón
+    const btnGenerar = document.getElementById('btnGenerar');
+    const textoOriginal = btnGenerar.innerHTML;
+    btnGenerar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando respuesta...';
+    btnGenerar.disabled = true;
+    
+    // Enviar respuestas a la IA
+    fetch(`/peticion/{{ peticion.radicado }}/asistente/procesar/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            respuestas: respuestasUsuario
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarRespuestaGenerada(data);
+        } else {
+            alert('Error: ' + (data.error || 'No se pudo generar la respuesta'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al generar la respuesta');
+    })
+    .finally(() => {
+        btnGenerar.innerHTML = textoOriginal;
+        btnGenerar.disabled = false;
+    });
+});
+
+function mostrarRespuestaGenerada(data) {
+    // Mostrar respuesta sin formato adicional
+    document.getElementById('respuestaGenerada').textContent = data.respuesta_sugerida;
+    document.getElementById('fechaGeneracion').textContent = data.fecha_generacion;
+    
+    // Mostrar evaluación si existe
+    if (data.evaluacion) {
+        const evaluacionDiv = document.getElementById('evaluacionCalidad');
+        const puntuacionDiv = document.getElementById('puntuacionTotal');
+        const recomendacionDiv = document.getElementById('recomendacion');
+        
+        puntuacionDiv.innerHTML = `<strong>Puntuación:</strong> ${data.evaluacion.puntuacion_total}/10`;
+        recomendacionDiv.innerHTML = `<strong>Recomendación:</strong> ${data.evaluacion.recomendacion}`;
+        
+        evaluacionDiv.style.display = 'block';
+    }
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalRespuestaGenerada'));
+    modal.show();
+}
+
+function copiarRespuesta() {
+    const respuesta = document.getElementById('respuestaGenerada').textContent;
+    navigator.clipboard.writeText(respuesta).then(() => {
+        // Mostrar notificación temporal
+        const btn = event.target;
+        const textoOriginal = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+        btn.classList.replace('btn-outline-primary', 'btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = textoOriginal;
+            btn.classList.replace('btn-success', 'btn-outline-primary');
+        }, 2000);
+    }).catch(err => {
+        console.error('Error al copiar:', err);
+        alert('Error al copiar al portapapeles');
+    });
+}
+
+function regenerarRespuesta() {
+    if (confirm('¿Estás seguro de regenerar la respuesta? Se perderá la respuesta actual.')) {
+        document.getElementById('formAsistente').dispatchEvent(new Event('submit'));
+    }
+}
+
+function descargarRespuesta() {
+    const respuesta = document.getElementById('respuestaGenerada').textContent;
+    const fecha = new Date().toLocaleDateString();
+    const contenido = `RESPUESTA AL DERECHO DE PETICIÓN\nRadicado: {{ peticion.radicado }}\nFecha: ${fecha}\n\n${respuesta}`;
+    
+    const blob = new Blob([contenido], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Respuesta_{{ peticion.radicado }}_${fecha.replace(/\//g, '-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

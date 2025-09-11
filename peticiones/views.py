@@ -1,4 +1,4 @@
-# views.py
+# views.py - ARCHIVO COMPLETO ACTUALIZADO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -10,7 +10,12 @@ from django.views.generic import ListView, DetailView
 from .models import Peticion, ProcesamientoIA
 from .forms import PeticionForm
 from .services.gemini_service import GeminiTranscriptionService
+from .services.asistente_respuesta_service import AsistenteRespuestaService
 import threading
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -218,3 +223,125 @@ def obtener_datos_peticionario(request, radicado):
         })
     
     return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+
+# ========================================
+# NUEVAS VISTAS PARA ASISTENTE IA
+# ========================================
+
+@csrf_exempt
+def iniciar_asistente_respuesta(request, radicado):
+    """
+    Inicia el proceso de asistente inteligente para generar respuesta
+    """
+    if request.method == 'POST':
+        try:
+            peticion = get_object_or_404(Peticion, radicado=radicado)
+            
+            # Verificar que la petición tenga transcripción
+            if not peticion.transcripcion_completa:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'La petición debe estar procesada por IA primero'
+                })
+            
+            # Iniciar análisis con IA
+            asistente_service = AsistenteRespuestaService()
+            analisis = asistente_service.analizar_peticion_y_generar_preguntas(peticion)
+            
+            # Guardar análisis en sesión
+            request.session[f'analisis_{radicado}'] = analisis
+            
+            return JsonResponse({
+                'success': True,
+                'analisis': analisis
+            })
+            
+        except Exception as e:
+            logger.error(f"Error en asistente para {radicado}: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+def mostrar_asistente_respuesta(request, radicado):
+    """
+    Muestra la interfaz del asistente con las preguntas generadas
+    """
+    peticion = get_object_or_404(Peticion, radicado=radicado)
+    
+    # Obtener análisis de la sesión
+    analisis = request.session.get(f'analisis_{radicado}')
+    
+    if not analisis:
+        messages.error(request, 'Debe iniciar el análisis primero')
+        return redirect('detalle_peticion', radicado=radicado)
+    
+    context = {
+        'peticion': peticion,
+        'analisis': analisis
+    }
+    
+    return render(request, 'peticiones/asistente_respuesta.html', context)
+
+
+@csrf_exempt
+def procesar_respuestas_asistente(request, radicado):
+    """
+    Procesa las respuestas del usuario y genera la respuesta sugerida
+    """
+    if request.method == 'POST':
+        try:
+            peticion = get_object_or_404(Peticion, radicado=radicado)
+            
+            # Obtener respuestas del formulario
+            data = json.loads(request.body)
+            respuestas_usuario = data.get('respuestas', [])
+            
+            if not respuestas_usuario:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No se proporcionaron respuestas'
+                })
+            
+            # Generar respuesta con IA
+            asistente_service = AsistenteRespuestaService()
+            resultado = asistente_service.generar_respuesta_sugerida(peticion, respuestas_usuario)
+            
+            # Evaluar calidad de la respuesta
+            evaluacion = asistente_service.evaluar_calidad_respuesta(resultado['respuesta_sugerida'])
+            
+            return JsonResponse({
+                'success': True,
+                'respuesta_sugerida': resultado['respuesta_sugerida'],
+                'evaluacion': evaluacion,
+                'fecha_generacion': resultado['fecha_generacion']
+            })
+            
+        except Exception as e:
+            logger.error(f"Error procesando respuestas para {radicado}: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+def historial_asistente(request, radicado):
+    """
+    Muestra el historial de respuestas generadas por el asistente
+    """
+    peticion = get_object_or_404(Peticion, radicado=radicado)
+    
+    # Aquí podrías implementar un modelo para guardar el historial
+    # Por ahora, mostraremos la última respuesta de la sesión
+    
+    context = {
+        'peticion': peticion
+    }
+    
+    return render(request, 'peticiones/historial_asistente.html', context)
