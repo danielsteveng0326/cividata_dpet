@@ -1,0 +1,136 @@
+<!-- templates/peticiones/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Sistema de Peticiones IA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Dashboard de Peticiones</h1>
+    <a href="{% url 'crear_peticion' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nueva Petición
+    </a>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_peticiones }}</h4>
+                        <p class="mb-0">Total Peticiones</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ sin_responder }}</h4>
+                        <p class="mb-0">Sin Responder</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ respondidas }}</h4>
+                        <p class="mb-0">Respondidas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>IA</h4>
+                        <p class="mb-0">Procesamiento</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-robot fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Peticiones Recientes -->
+<div class="card">
+    <div class="card-header">
+        <h5>Peticiones Recientes</h5>
+    </div>
+    <div class="card-body">
+        {% if peticiones_recientes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Radicado</th>
+                            <th>Peticionario</th>
+                            <th>Fuente</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for peticion in peticiones_recientes %}
+                        <tr>
+                            <td>
+                                <strong>{{ peticion.radicado }}</strong>
+                            </td>
+                            <td>{{ peticion.peticionario_nombre|default:"Anónimo" }}</td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ peticion.get_fuente_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if peticion.estado == 'sin_responder' %}
+                                    <span class="badge bg-warning">Sin Responder</span>
+                                {% else %}
+                                    <span class="badge bg-success">Respondido</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ peticion.fecha_radicacion|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'detalle_peticion' peticion.radicado %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">No hay peticiones registradas aún.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

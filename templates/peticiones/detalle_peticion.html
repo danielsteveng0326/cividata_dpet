@@ -1,0 +1,241 @@
+<!-- templates/peticiones/detalle_peticion.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ peticion.radicado }} - Detalle Petición{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Detalle de Petición</h1>
+    <div>
+        <a href="{% url 'lista_peticiones' %}" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Volver a Lista
+        </a>
+        {% if peticion.estado == 'sin_responder' %}
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#cambiarEstadoModal">
+                <i class="fas fa-check"></i> Marcar como Respondido
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Información Principal -->
+<div class="row">
+    <div class="col-md-8">
+        <!-- Datos de la Petición -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt"></i>
+                    Información de la Petición
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Radicado:</strong> 
+                            <span class="badge bg-primary fs-6">{{ peticion.radicado }}</span>
+                        </p>
+                        <p><strong>Fecha de Radicación:</strong> 
+                            {{ peticion.fecha_radicacion|date:"d/m/Y H:i" }}
+                        </p>
+                        <p><strong>Estado:</strong>
+                            {% if peticion.estado == 'sin_responder' %}
+                                <span class="badge bg-warning">Sin Responder</span>
+                            {% else %}
+                                <span class="badge bg-success">Respondido</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Fuente:</strong> 
+                            <span class="badge bg-secondary">{{ peticion.get_fuente_display }}</span>
+                        </p>
+                        <p><strong>Última Actualización:</strong> 
+                            {{ peticion.fecha_actualizacion|date:"d/m/Y H:i" }}
+                        </p>
+                        {% if peticion.archivo_pdf %}
+                            <p><strong>Archivo PDF:</strong>
+                                <a href="{{ peticion.archivo_pdf.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Descargar
+                                </a>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datos del Peticionario -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user"></i>
+                    Datos del Peticionario
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if peticion.peticionario_nombre or peticion.peticionario_id or peticion.peticionario_telefono or peticion.peticionario_correo or peticion.peticionario_direccion %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if peticion.peticionario_nombre %}
+                                <p><strong>Nombre:</strong> {{ peticion.peticionario_nombre }}</p>
+                            {% endif %}
+                            {% if peticion.peticionario_id %}
+                                <p><strong>Documento:</strong> {{ peticion.peticionario_id }}</p>
+                            {% endif %}
+                            {% if peticion.peticionario_telefono %}
+                                <p><strong>Teléfono:</strong> {{ peticion.peticionario_telefono }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if peticion.peticionario_correo %}
+                                <p><strong>Correo:</strong> 
+                                    <a href="mailto:{{ peticion.peticionario_correo }}">{{ peticion.peticionario_correo }}</a>
+                                </p>
+                            {% endif %}
+                            {% if peticion.peticionario_direccion %}
+                                <p><strong>Dirección:</strong><br>
+                                    <span class="text-muted">{{ peticion.peticionario_direccion }}</span>
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        No se proporcionaron datos del peticionario
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Transcripción de la Petición -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-text"></i>
+                    Transcripción del Documento
+                </h5>
+                {% if procesamiento_ia %}
+                    <button class="btn btn-sm btn-outline-primary" onclick="reprocesarPeticion('{{ peticion.radicado }}')">
+                        <i class="fas fa-sync-alt"></i> Reprocesar
+                    </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if peticion.transcripcion_completa %}
+                    <div class="border rounded p-3" style="background-color: #f8f9fa; max-height: 500px; overflow-y: auto;">
+                        <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{{ peticion.transcripcion_completa }}</pre>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Procesando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">
+                            El documento está siendo procesado por IA. Actualice la página en unos momentos.
+                        </p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+                            <i class="fas fa-refresh"></i> Actualizar Página
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Lateral -->
+    <div class="col-md-4">
+        <!-- Acciones Rápidas -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-tools"></i>
+                    Acciones Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if peticion.archivo_pdf %}
+                        <a href="{{ peticion.archivo_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> Ver PDF Original
+                        </a>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline-secondary btn-sm" onclick="copiarTranscripcion()">
+                        <i class="fas fa-copy"></i> Copiar Transcripción
+                    </button>
+                    
+                    <button class="btn btn-outline-info btn-sm" onclick="window.print()">
+                        <i class="fas fa-print"></i> Imprimir Detalle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Cambiar Estado -->
+<div class="modal fade" id="cambiarEstadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado de Petición</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'cambiar_estado_peticion' peticion.radicado %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>¿Está seguro de marcar esta petición como <strong>respondida</strong>?</p>
+                    <input type="hidden" name="nuevo_estado" value="respondido">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function reprocesarPeticion(radicado) {
+    if (confirm('¿Está seguro de reprocesar esta petición con IA?')) {
+        fetch(`/peticion/${radicado}/reprocesar/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Reprocesamiento iniciado. Actualice la página en unos momentos.');
+            } else {
+                alert('Error al iniciar el reprocesamiento.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al procesar la solicitud.');
+        });
+    }
+}
+
+function copiarTranscripcion() {
+    const transcripcion = document.querySelector('pre').textContent;
+    navigator.clipboard.writeText(transcripcion).then(() => {
+        alert('Transcripción copiada al portapapeles');
+    }).catch(err => {
+        console.error('Error al copiar:', err);
+    });
+}
+
+function editarPeticionario(radicado) {
+    // Redirigir a la lista para usar el modal de edición
+    window.location.href = `/lista/?search=${radicado}`;
+}
+</script>
+{% endblock %}

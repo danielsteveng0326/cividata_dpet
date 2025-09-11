@@ -1,0 +1,359 @@
+# .gitignore para Sistema de Derechos de Petición con IA
+
+# ========================================
+# Python
+# ========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ========================================
+# Django
+# ========================================
+# SQLite database
+*.db
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3-wal
+db.sqlite3-shm
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations (descomenta si quieres ignorar migraciones)
+# */migrations/*.py
+# */migrations/*.pyc
+# !*/migrations/__init__.py
+
+# Django media files (PDFs subidos, respuestas, etc.)
+media/
+mediafiles/
+
+# Django static files
+staticfiles/
+static_root/
+
+# Django collected static files
+/static/
+
+# Django cache
+django_cache/
+
+# ========================================
+# Archivos específicos del proyecto
+# ========================================
+# Archivos PDF de peticiones (confidenciales)
+media/peticiones/*.pdf
+media/respuestas/*.pdf
+
+# Logs del sistema
+logs/
+*.log
+
+# Backups de base de datos
+*.dump
+*.sql
+backup/
+
+# Archivos temporales de procesamiento IA
+temp/
+tmp/
+
+# ========================================
+# Variables de entorno y configuración
+# ========================================
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos de configuración sensibles
+config.py
+secrets.py
+local_config.py
+
+# API Keys y tokens
+.gemini_key
+.api_keys
+credentials.json
+
+# ========================================
+# IDEs y editores
+# ========================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*~
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Atom
+.atom/
+
+# VS Code
+.vscode/
+.history/
+
+# ========================================
+# Sistema Operativo
+# ========================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================================
+# Herramientas de desarrollo
+# ========================================
+# Node.js (si se usa para frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Vagrant
+.vagrant/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+
+# ========================================
+# Archivos de documentación
+# ========================================
+# Sphinx documentation
+docs/_build/
+
+# MkDocs
+site/
+
+# ========================================
+# Archivos específicos de producción
+# ========================================
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Archivos de deployment
+deploy.sh
+fabfile.py
+
+# Archivos de configuración del servidor
+apache.conf
+nginx.conf
+gunicorn.conf
+
+# Archivos de monitoreo
+newrelic.ini
+
+# ========================================
+# Misceláneos
+# ========================================
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Archivos comprimidos
+*.zip
+*.tar.gz
+*.rar
+
+# Archivos de prueba
+test_files/
+test_data/
+sample_data/
+
+# Notas personales
+NOTES.md
+TODO.md
+.notes/

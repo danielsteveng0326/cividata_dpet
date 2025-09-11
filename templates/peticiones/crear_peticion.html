@@ -1,0 +1,111 @@
+<!-- templates/peticiones/crear_peticion.html -->
+{% extends 'base.html' %}
+
+{% block title %}Nueva Petición - Sistema de Peticiones IA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle"></i>
+                    Crear Nueva Petición
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-calendar-alt"></i>
+                        <strong>Importante:</strong> La fecha de radicación es obligatoria y determina los términos de vencimiento del derecho de petición.
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-robot"></i>
+                        <strong>IA Inteligente:</strong> Los datos del peticionario son opcionales. 
+                        Si no los llena, la IA intentará extraerlos automáticamente del documento PDF.
+                        También puede llenar algunos campos y dejar que la IA complete los faltantes.
+                    </div>
+                    
+                    <!-- Fecha de Radicación -->
+                    <fieldset class="mb-4">
+                        <legend class="fs-5 border-bottom pb-2">Fecha de Radicación (Obligatoria)</legend>
+                        
+                        <div class="mb-3">
+                            {{ form.fecha_radicacion.label_tag }}
+                            {{ form.fecha_radicacion }}
+                            <div class="form-text">
+                                <strong>Importante:</strong> Esta fecha determina los términos legales de respuesta del derecho de petición.
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Datos del Peticionario -->
+                    <fieldset class="mb-4">
+                        <legend class="fs-5 border-bottom pb-2">Datos del Peticionario (Opcional)</legend>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.peticionario_nombre.label_tag }}
+                                {{ form.peticionario_nombre }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.peticionario_id.label_tag }}
+                                {{ form.peticionario_id }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.peticionario_telefono.label_tag }}
+                                {{ form.peticionario_telefono }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.peticionario_correo.label_tag }}
+                                {{ form.peticionario_correo }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.peticionario_direccion.label_tag }}
+                            {{ form.peticionario_direccion }}
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Documento y Fuente -->
+                    <fieldset class="mb-4">
+                        <legend class="fs-5 border-bottom pb-2">Documento y Recepción</legend>
+                        
+                        <div class="mb-3">
+                            {{ form.archivo_pdf.label_tag }}
+                            {{ form.archivo_pdf }}
+                            <div class="form-text">
+                                Archivo PDF del derecho de petición. Máximo 10MB.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.fuente.label_tag }}
+                            {{ form.fuente }}
+                            <div class="form-text">
+                                Indique cómo fue recibida la petición.
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'index' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Crear Petición
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

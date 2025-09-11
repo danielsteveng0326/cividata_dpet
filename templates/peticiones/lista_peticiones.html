@@ -1,0 +1,370 @@
+<!-- templates/peticiones/lista_peticiones.html -->
+{% extends 'base.html' %}
+
+{% block title %}Lista de Peticiones - Sistema de Peticiones IA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Lista de Peticiones</h1>
+    <a href="{% url 'crear_peticion' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nueva Petición
+    </a>
+</div>
+
+<!-- Filtros de Búsqueda -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Radicado, nombre o documento...">
+            </div>
+            <div class="col-md-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-control" id="estado" name="estado">
+                    <option value="">Todos los estados</option>
+                    <option value="sin_responder" {% if estado_filtro == 'sin_responder' %}selected{% endif %}>Sin Responder</option>
+                    <option value="respondido" {% if estado_filtro == 'respondido' %}selected{% endif %}>Respondido</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="fuente" class="form-label">Fuente</label>
+                <select class="form-control" id="fuente" name="fuente">
+                    <option value="">Todas las fuentes</option>
+                    <option value="gestion_documental" {% if fuente_filtro == 'gestion_documental' %}selected{% endif %}>Gestión Documental</option>
+                    <option value="correo_electronico" {% if fuente_filtro == 'correo_electronico' %}selected{% endif %}>Correo Electrónico</option>
+                    <option value="presencial" {% if fuente_filtro == 'presencial' %}selected{% endif %}>Presencial</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resultados -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-list"></i>
+            Peticiones 
+            {% if search or estado_filtro or fuente_filtro %}
+                (Filtradas)
+            {% endif %}
+        </h5>
+        <span class="badge bg-primary">{{ peticiones|length }} resultados</span>
+    </div>
+    <div class="card-body p-0">
+        {% if peticiones %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Radicado</th>
+                            <th>Peticionario</th>
+                            <th>Fuente</th>
+                            <th>Estado</th>
+                            <th>IA</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for peticion in peticiones %}
+                        <tr>
+                            <td>
+                                <strong>{{ peticion.radicado }}</strong>
+                            </td>
+                            <td>
+                                {% if peticion.peticionario_nombre %}
+                                    {{ peticion.peticionario_nombre }}
+                                    {% if peticion.peticionario_id %}
+                                        <br><small class="text-muted">{{ peticion.peticionario_id }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Anónimo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ peticion.get_fuente_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if peticion.estado == 'sin_responder' %}
+                                    <span class="badge bg-warning">Sin Responder</span>
+                                {% else %}
+                                    <span class="badge bg-success">Respondido</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if peticion.transcripcion_completa %}
+                                    <span class="badge bg-success" title="Procesado">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning" title="Procesando">
+                                        <i class="fas fa-clock"></i>
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>
+                                    {{ peticion.fecha_radicacion|date:"d/m/Y" }}<br>
+                                    {{ peticion.fecha_radicacion|date:"H:i" }}
+                                </small>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'detalle_peticion' peticion.radicado %}" 
+                                       class="btn btn-sm btn-outline-primary" title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if peticion.archivo_pdf %}
+                                        <a href="{{ peticion.archivo_pdf.url }}" target="_blank"
+                                           class="btn btn-sm btn-outline-secondary" title="Ver PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if peticion.estado == 'sin_responder' %}
+                                        <button class="btn btn-sm btn-outline-success" 
+                                                onclick="cambiarEstado('{{ peticion.radicado }}', 'respondido')"
+                                                title="Marcar como respondido">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No se encontraron peticiones</h5>
+                {% if search or estado_filtro or fuente_filtro %}
+                    <p class="text-muted">Pruebe ajustando los filtros de búsqueda</p>
+                    <a href="{% url 'lista_peticiones' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-times"></i> Limpiar Filtros
+                    </a>
+                {% else %}
+                    <p class="text-muted">Aún no hay peticiones registradas en el sistema</p>
+                    <a href="{% url 'crear_peticion' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Primera Petición
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Paginación -->
+{% if is_paginated %}
+<nav aria-label="Paginación de peticiones" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if estado_filtro %}estado={{ estado_filtro }}&{% endif %}{% if fuente_filtro %}fuente={{ fuente_filtro }}&{% endif %}page=1">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if estado_filtro %}estado={{ estado_filtro }}&{% endif %}{% if fuente_filtro %}fuente={{ fuente_filtro }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">
+                {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if estado_filtro %}estado={{ estado_filtro }}&{% endif %}{% if fuente_filtro %}fuente={{ fuente_filtro }}&{% endif %}page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if estado_filtro %}estado={{ estado_filtro }}&{% endif %}{% if fuente_filtro %}fuente={{ fuente_filtro }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Modal para Confirmación de Cambio de Estado -->
+<div class="modal fade" id="cambiarEstadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de cambiar el estado de esta petición?</p>
+                <p><strong>Radicado:</strong> <span id="modalRadicado"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="confirmarCambioEstado()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let radicadoActual = '';
+let estadoNuevo = '';
+let radicadoEditando = '';
+
+function cambiarEstado(radicado, nuevoEstado) {
+    radicadoActual = radicado;
+    estadoNuevo = nuevoEstado;
+    document.getElementById('modalRadicado').textContent = radicado;
+    
+    const modal = new bootstrap.Modal(document.getElementById('cambiarEstadoModal'));
+    modal.show();
+}
+
+function confirmarCambioEstado() {
+    // Crear formulario dinámico para enviar POST
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/peticion/${radicadoActual}/cambiar-estado/`;
+    
+    // Token CSRF
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = 'csrfmiddlewaretoken';
+    csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    form.appendChild(csrfToken);
+    
+    // Nuevo estado
+    const estadoInput = document.createElement('input');
+    estadoInput.type = 'hidden';
+    estadoInput.name = 'nuevo_estado';
+    estadoInput.value = estadoNuevo;
+    form.appendChild(estadoInput);
+    
+    // Enviar formulario
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function editarPeticionario(radicado) {
+    radicadoEditando = radicado;
+    document.getElementById('modalRadicadoEdit').textContent = radicado;
+    
+    // Obtener datos actuales del peticionario
+    fetch(`/peticion/${radicado}/datos-peticionario/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('edit_nombre').value = data.peticionario_nombre || '';
+                document.getElementById('edit_documento').value = data.peticionario_id || '';
+                document.getElementById('edit_telefono').value = data.peticionario_telefono || '';
+                document.getElementById('edit_correo').value = data.peticionario_correo || '';
+                document.getElementById('edit_direccion').value = data.peticionario_direccion || '';
+                
+                // Mostrar modal
+                const modal = new bootstrap.Modal(document.getElementById('editarPeticionarioModal'));
+                modal.show();
+            } else {
+                alert('Error al cargar los datos del peticionario');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos');
+        });
+}
+
+// Manejar envío del formulario de edición
+document.getElementById('formEditarPeticionario').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const btnGuardar = document.getElementById('btnGuardarPeticionario');
+    const textoOriginal = btnGuardar.innerHTML;
+    
+    // Mostrar estado de carga
+    btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    btnGuardar.disabled = true;
+    
+    // Ocultar errores anteriores
+    document.getElementById('editErrors').classList.add('d-none');
+    
+    // Preparar datos del formulario
+    const formData = new FormData(this);
+    
+    // Agregar token CSRF
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    // Enviar petición AJAX
+    fetch(`/peticion/${radicadoEditando}/editar-peticionario/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editarPeticionarioModal'));
+            modal.hide();
+            
+            // Recargar página para mostrar cambios
+            location.reload();
+        } else {
+            // Mostrar errores
+            let errorsHtml = '<strong>Errores:</strong><ul>';
+            for (const field in data.errors) {
+                data.errors[field].forEach(error => {
+                    errorsHtml += `<li>${error}</li>`;
+                });
+            }
+            errorsHtml += '</ul>';
+            
+            document.getElementById('editErrors').innerHTML = errorsHtml;
+            document.getElementById('editErrors').classList.remove('d-none');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('editErrors').innerHTML = 'Error al procesar la solicitud';
+        document.getElementById('editErrors').classList.remove('d-none');
+    })
+    .finally(() => {
+        // Restaurar botón
+        btnGuardar.innerHTML = textoOriginal;
+        btnGuardar.disabled = false;
+    });
+});
+
+// Auto-refresh para ver actualizaciones de IA
+setInterval(function() {
+    // Solo refrescar si hay peticiones en procesamiento
+    const procesandoBadges = document.querySelectorAll('.badge.bg-warning i.fa-clock');
+    if (procesandoBadges.length > 0) {
+        location.reload();
+    }
+}, 30000); // Cada 30 segundos
+</script>
+{% endblock %}
