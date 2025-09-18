@@ -17,3 +17,6 @@ django-cors-headers==4.3.1
 # Nuevas dependencias para el asistente IA
 beautifulsoup4==4.12.2  # Para parsing HTML si se necesita
 markdown==3.5.1        # Para formatear respuestas si se requiere
+
+
+#que designe a la dependencia
