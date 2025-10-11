@@ -60,8 +60,47 @@
                                 </a>
                             </p>
                         {% endif %}
+                        {% if peticion.fecha_respuesta %}
+                            <p><strong>Fecha de Respuesta:</strong> 
+                                {{ peticion.fecha_respuesta|date:"d/m/Y H:i" }}
+                            </p>
+                        {% endif %}
                     </div>
                 </div>
+                
+                <!-- Archivos Adjuntos (solo si está respondida) -->
+                {% if peticion.estado == 'respondido' and peticion.archivo_respuesta_firmada %}
+                <hr>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6><i class="fas fa-paperclip"></i> Archivos Adjuntos de Respuesta</h6>
+                    </div>
+                    {% if peticion.archivo_respuesta_firmada %}
+                    <div class="col-md-6">
+                        <div class="card border-success mb-2">
+                            <div class="card-body p-2">
+                                <small class="text-muted">Respuesta Firmada:</small><br>
+                                <a href="{{ peticion.archivo_respuesta_firmada.url }}" target="_blank" class="btn btn-sm btn-success">
+                                    <i class="fas fa-file-signature"></i> Ver Archivo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if peticion.archivo_constancia_envio %}
+                    <div class="col-md-6">
+                        <div class="card border-info mb-2">
+                            <div class="card-body p-2">
+                                <small class="text-muted">Constancia de Envío:</small><br>
+                                <a href="{{ peticion.archivo_constancia_envio.url }}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="fas fa-envelope-open-text"></i> Ver Archivo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -184,21 +223,73 @@
 
 <!-- Modal para Cambiar Estado -->
 <div class="modal fade" id="cambiarEstadoModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cambiar Estado de Petición</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle"></i>
+                    Marcar como Respondido
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="{% url 'cambiar_estado_peticion' peticion.radicado %}">
+            <form method="post" action="{% url 'cambiar_estado_peticion' peticion.radicado %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <p>¿Está seguro de marcar esta petición como <strong>respondida</strong>?</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Importante:</strong> Para marcar esta petición como respondida, debe adjuntar los siguientes archivos:
+                    </div>
+                    
                     <input type="hidden" name="nuevo_estado" value="respondido">
+                    
+                    <!-- Campo 1: Respuesta Firmada -->
+                    <div class="mb-3">
+                        <label for="archivo_respuesta_firmada" class="form-label">
+                            <i class="fas fa-file-signature"></i>
+                            <strong>1. Respuesta Firmada</strong>
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" 
+                               class="form-control" 
+                               id="archivo_respuesta_firmada" 
+                               name="archivo_respuesta_firmada" 
+                               accept=".pdf,.doc,.docx"
+                               required>
+                        <small class="form-text text-muted">
+                            Formatos permitidos: PDF, DOC, DOCX (Máx. 10MB)
+                        </small>
+                    </div>
+                    
+                    <!-- Campo 2: Constancia de Envío -->
+                    <div class="mb-3">
+                        <label for="archivo_constancia_envio" class="form-label">
+                            <i class="fas fa-envelope-open-text"></i>
+                            <strong>2. Constancia de Envío</strong>
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" 
+                               class="form-control" 
+                               id="archivo_constancia_envio" 
+                               name="archivo_constancia_envio" 
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                               required>
+                        <small class="form-text text-muted">
+                            Formatos permitidos: PDF, DOC, DOCX, JPG, PNG (Máx. 10MB)
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Esta acción marcará la petición como <strong>respondida</strong> y registrará la fecha de respuesta.
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Confirmar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Confirmar y Adjuntar
+                    </button>
                 </div>
             </form>
         </div>

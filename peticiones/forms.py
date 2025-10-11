@@ -70,3 +70,47 @@ class PeticionForm(forms.ModelForm):
             if archivo.size > 10 * 1024 * 1024:  # 10MB máximo
                 raise forms.ValidationError('El archivo no puede ser mayor a 10MB.')
         return archivo
+
+
+class MarcarRespondidoForm(forms.ModelForm):
+    """Formulario para marcar una petición como respondida con archivos adjuntos"""
+    
+    class Meta:
+        model = Peticion
+        fields = ['archivo_respuesta_firmada', 'archivo_constancia_envio']
+        widgets = {
+            'archivo_respuesta_firmada': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx',
+                'required': True
+            }),
+            'archivo_constancia_envio': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+                'required': True
+            })
+        }
+        labels = {
+            'archivo_respuesta_firmada': 'Respuesta Firmada',
+            'archivo_constancia_envio': 'Constancia de Envío'
+        }
+    
+    def clean_archivo_respuesta_firmada(self):
+        archivo = self.cleaned_data.get('archivo_respuesta_firmada')
+        if archivo:
+            extensiones_validas = ['.pdf', '.doc', '.docx']
+            if not any(archivo.name.lower().endswith(ext) for ext in extensiones_validas):
+                raise forms.ValidationError('Solo se permiten archivos PDF, DOC o DOCX.')
+            if archivo.size > 10 * 1024 * 1024:  # 10MB máximo
+                raise forms.ValidationError('El archivo no puede ser mayor a 10MB.')
+        return archivo
+    
+    def clean_archivo_constancia_envio(self):
+        archivo = self.cleaned_data.get('archivo_constancia_envio')
+        if archivo:
+            extensiones_validas = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png']
+            if not any(archivo.name.lower().endswith(ext) for ext in extensiones_validas):
+                raise forms.ValidationError('Solo se permiten archivos PDF, DOC, DOCX o imágenes.')
+            if archivo.size > 10 * 1024 * 1024:  # 10MB máximo
+                raise forms.ValidationError('El archivo no puede ser mayor a 10MB.')
+        return archivo

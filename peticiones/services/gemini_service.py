@@ -59,7 +59,7 @@ class GeminiTranscriptionService:
             Tu tarea es:
             1. Limpiar y estructurar el siguiente texto extraído de un PDF
             2. Corregir errores de OCR si los hay
-            3. Mantener TODO el contenido original, no resumir ni omitir información
+            3. Mantener TODO el contenido original, no resumir ni omitir información, todo debe ser exactamente como está en el PDF
             4. Organizar el texto de manera clara y legible
             5. Conservar la estructura original del documento
 

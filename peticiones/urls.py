@@ -16,4 +16,5 @@ urlpatterns = [
     path('peticion/<str:radicado>/asistente/', views.mostrar_asistente_respuesta, name='mostrar_asistente_respuesta'),
     path('peticion/<str:radicado>/asistente/procesar/', views.procesar_respuestas_asistente, name='procesar_respuestas_asistente'),
     path('peticion/<str:radicado>/asistente/historial/', views.historial_asistente, name='historial_asistente'),
+    path('peticion/<str:radicado>/asistente/descargar-word/', views.descargar_respuesta_word, name='descargar_respuesta_word'),
 ]

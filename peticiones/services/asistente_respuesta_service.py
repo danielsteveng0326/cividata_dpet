@@ -15,7 +15,7 @@ class AsistenteRespuestaService:
         Servicio para generar respuestas inteligentes a derechos de petición
         """
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-pro')
     
     def analizar_peticion_y_generar_preguntas(self, peticion):
         """
@@ -42,10 +42,10 @@ class AsistenteRespuestaService:
                - Obtener información adicional necesaria para una respuesta completa
                - Identificar la competencia exacta del municipio
                - Determinar el procedimiento o normativa aplicable
-            4. Al final añade una pregunta opcional (esta siempre va) donde le pidas al usuario que ponga contexto que considere importante y relevante para la respuesta
+            4. Añade una pregunta final donde pidas que el servidor público agregue información relevante para el contexto de la respuesta (este cuadro siempre va al final)
 
-            Las preguntas deben ser:
-            - Específicas, corta, sencilla y fáciles de entender para el servidor público y relevantes al caso
+            Las que tú le harás al servidor público es la persona responsable de dat la respuesta así que asegurate que las preguntas deben ser:
+            - Específicas, corta, sencilla y fáciles de entender para el servidor público que es quien dará respuesta y relevantes al caso
             - Orientadas a obtener información que mejore la calidad de la respuesta
             - Enfocadas en la forma en que se complementatará la respuesta
 
@@ -56,8 +56,7 @@ class AsistenteRespuestaService:
                 "preguntas": [
                     {{
                         "pregunta": "¿Pregunta específica?",
-                        "justificacion": "Por qué es importante esta pregunta",
-                        "opciones_sugeridas": ["opción 1", "opción 2", "opción 3"]
+                         "respuesta y complemento que mejora el contexto": ["opción 1", "opción 2", "opción 3"]
                     }}
                 ],
                 "urgencia": "alta|media|baja",
@@ -111,7 +110,7 @@ class AsistenteRespuestaService:
             prompt = f"""
             Eres un experto en derecho administrativo colombiano especializado en derechos de petición.
             
-            Con base en el derecho de petición analizado y las respuestas proporcionadas por el funcionario, genera una respuesta COMPLETA, PRECISA y LEGALMENTE FUNDAMENTADA.
+            Con base en el derecho de petición analizado y el contexto y las respuestas proporcionadas por el funcionario, genera una respuesta COMPLETA, PRECISA y LEGALMENTE FUNDAMENTADA.
 
             DERECHO DE PETICIÓN:
             {peticion.transcripcion_completa}
@@ -129,15 +128,20 @@ class AsistenteRespuestaService:
             7. Mantener un tono respetuoso y servicial
             8. No uses negrita, ni subrayado, ni pasos a seguir ni indicaciones dentro del derecho de petición ponlo listo para copiar
             9. No uses **
+            10. En la firma pon el nombre del funcionario y el cargo (extráelo de su nombre de inicio de sesión)
+            11. Nunca dejes información por completar ni vacía
+            12. Toma la información del peticionario y úsala para la respuesta
+            13. Siempre usa la fecha actual (proporcionada por la red)
 
             ESTRUCTURA SUGERIDA:
             1. Saludo cordial y referencia al radicado
             2. Respuesta punto por punto
-            3. Fundamentos legales
+            3. Fundamentos legales (si aplica)
             4. Pasos a seguir (si aplica)
-            5. Información de contacto para dudas
-            6. Despedida formal
+            5. Información de contacto para dudas (si aplica)
+            6. Despedida formal 
             7. No uses **
+            8. Nunca dejes información por completar ni vacía
 
             GENERA UNA RESPUESTA COMPLETA Y LISTA PARA ENVIAR:
             """

@@ -142,12 +142,35 @@ def reprocesar_peticion(request, radicado):
 
 
 def cambiar_estado_peticion(request, radicado):
-    """Vista para cambiar el estado de una petición"""
+    """Vista para cambiar el estado de una petición con archivos adjuntos"""
     if request.method == 'POST':
+        from .forms import MarcarRespondidoForm
+        from django.utils import timezone
+        
         peticion = get_object_or_404(Peticion, radicado=radicado)
         nuevo_estado = request.POST.get('nuevo_estado')
         
-        if nuevo_estado in ['sin_responder', 'respondido']:
+        if nuevo_estado == 'respondido':
+            # Usar formulario para validar archivos
+            form = MarcarRespondidoForm(request.POST, request.FILES, instance=peticion)
+            
+            if form.is_valid():
+                peticion = form.save(commit=False)
+                peticion.estado = 'respondido'
+                peticion.fecha_respuesta = timezone.now()
+                peticion.save()
+                
+                messages.success(
+                    request, 
+                    f'Petición {radicado} marcada como respondida con archivos adjuntos correctamente.'
+                )
+            else:
+                # Mostrar errores del formulario
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'{form.fields[field].label}: {error}')
+                return redirect('detalle_peticion', radicado=radicado)
+        elif nuevo_estado == 'sin_responder':
             peticion.estado = nuevo_estado
             peticion.save()
             
@@ -345,3 +368,116 @@ def historial_asistente(request, radicado):
     }
     
     return render(request, 'peticiones/historial_asistente.html', context)
+
+
+@csrf_exempt
+def descargar_respuesta_word(request, radicado):
+    """
+    Descarga la respuesta generada en formato Word (.docx) con plantilla
+    """
+    if request.method == 'POST':
+        try:
+            from docx import Document
+            from docx.shared import Pt, Inches
+            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            from django.http import HttpResponse
+            from datetime import datetime
+            import io
+            
+            peticion = get_object_or_404(Peticion, radicado=radicado)
+            
+            # Obtener el contenido de la respuesta del POST
+            data = json.loads(request.body)
+            contenido_respuesta = data.get('contenido_respuesta', '')
+            
+            if not contenido_respuesta:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No se proporcionó contenido para la respuesta'
+                })
+            
+            # Crear documento Word
+            doc = Document()
+            
+            # Configurar márgenes
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+            
+            # Encabezado del documento
+            header = doc.add_paragraph()
+            header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = header.add_run('RESPUESTA AL DERECHO DE PETICIÓN')
+            run.bold = True
+            run.font.size = Pt(14)
+            
+            # Espacio
+            doc.add_paragraph()
+            
+            # Información del radicado
+            info_radicado = doc.add_paragraph()
+            info_radicado.add_run(f'Radicado: ').bold = True
+            info_radicado.add_run(peticion.radicado)
+            
+            # Fecha
+            info_fecha = doc.add_paragraph()
+            info_fecha.add_run(f'Fecha de Respuesta: ').bold = True
+            info_fecha.add_run(datetime.now().strftime('%d de %B de %Y'))
+            
+            # Peticionario
+            if peticion.peticionario_nombre:
+                info_peticionario = doc.add_paragraph()
+                info_peticionario.add_run(f'Peticionario: ').bold = True
+                info_peticionario.add_run(peticion.peticionario_nombre)
+            
+            # Línea separadora
+            doc.add_paragraph('_' * 80)
+            
+            # Espacio
+            doc.add_paragraph()
+            
+            # Contenido de la respuesta
+            # Dividir por párrafos y agregar al documento
+            parrafos = contenido_respuesta.split('\n')
+            for parrafo in parrafos:
+                if parrafo.strip():
+                    p = doc.add_paragraph(parrafo.strip())
+                    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                    p_format = p.paragraph_format
+                    p_format.line_spacing = 1.5
+                    p_format.space_after = Pt(6)
+                    
+                    # Aplicar formato a todo el texto del párrafo
+                    for run in p.runs:
+                        run.font.name = 'Times New Roman'
+                        run.font.size = Pt(12)
+                else:
+                    doc.add_paragraph()  # Línea en blanco
+            
+            # Guardar documento en memoria
+            file_stream = io.BytesIO()
+            doc.save(file_stream)
+            file_stream.seek(0)
+            
+            # Preparar respuesta HTTP
+            response = HttpResponse(
+                file_stream.read(),
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            
+            filename = f'Respuesta_{peticion.radicado}_{datetime.now().strftime("%Y%m%d")}.docx'
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error generando documento Word para {radicado}: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})

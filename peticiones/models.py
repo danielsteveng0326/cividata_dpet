@@ -41,6 +41,11 @@ class Peticion(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='sin_responder')
     fuente = models.CharField(max_length=20, choices=FUENTE_CHOICES)
     
+    # Archivos adjuntos al marcar como respondido
+    archivo_respuesta_firmada = models.FileField(upload_to='respuestas_firmadas/', blank=True, null=True, help_text="Respuesta firmada")
+    archivo_constancia_envio = models.FileField(upload_to='constancias_envio/', blank=True, null=True, help_text="Constancia de envío")
+    fecha_respuesta = models.DateTimeField(blank=True, null=True, help_text="Fecha en que se marcó como respondido")
+    
     # Fecha de actualización automática
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     
