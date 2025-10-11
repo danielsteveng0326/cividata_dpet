@@ -15,11 +15,11 @@ class AsistenteRespuestaService:
         Servicio para generar respuestas inteligentes a derechos de petición
         """
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def analizar_peticion_y_generar_preguntas(self, peticion):
         """
-        Analiza el derecho de petición y genera preguntas estratégicas
+        Analiza el derecho de petición y genera preguntas cortas y sencillas
         para recopilar información necesaria para dar una respuesta precisa
         """
         try:
@@ -29,7 +29,7 @@ class AsistenteRespuestaService:
             prompt = f"""
             Eres un experto en derecho administrativo y derechos de petición en Colombia.
             
-            Tu tarea es analizar el siguiente derecho de petición y generar máximo 3 preguntas estratégicas que permitan al funcionario municipal dar una respuesta precisa, completa y oportuna.
+            Tu tarea es analizar el siguiente derecho de petición y generar máximo 3 preguntas cortas y sencillas que permitan al funcionario municipal dar una respuesta precisa, completa y oportuna.
 
             DERECHO DE PETICIÓN A ANALIZAR:
             {peticion.transcripcion_completa}
@@ -42,11 +42,12 @@ class AsistenteRespuestaService:
                - Obtener información adicional necesaria para una respuesta completa
                - Identificar la competencia exacta del municipio
                - Determinar el procedimiento o normativa aplicable
+            4. Al final añade una pregunta opcional (esta siempre va) donde le pidas al usuario que ponga contexto que considere importante y relevante para la respuesta
 
             Las preguntas deben ser:
-            - Específicas y relevantes al caso
+            - Específicas, corta, sencilla y fáciles de entender para el servidor público y relevantes al caso
             - Orientadas a obtener información que mejore la calidad de la respuesta
-            - Enfocadas en aspectos legales, técnicos o procedimentales
+            - Enfocadas en la forma en que se complementatará la respuesta
 
             RESPONDE EN EL SIGUIENTE FORMATO JSON:
             {{

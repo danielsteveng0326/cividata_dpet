@@ -18,7 +18,7 @@ class GeminiTranscriptionService:
         Inicializa el servicio de Gemini para transcripción de PDFs
         """
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def extraer_texto_pdf(self, archivo_pdf):
         """
