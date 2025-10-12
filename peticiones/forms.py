@@ -18,9 +18,10 @@ class PeticionForm(forms.ModelForm):
                 help_text='Seleccione la dependencia que debe responder esta petición'
             )
         else:
-            # Para otros usuarios, no mostrar el campo (se asigna automáticamente)
+            # Para otros usuarios, ocultar el campo (se asigna automáticamente)
             if 'dependencia' in self.fields:
-                del self.fields['dependencia']
+                self.fields['dependencia'].required = False
+                self.fields['dependencia'].widget = forms.HiddenInput()
     
     class Meta:
         model = Peticion
