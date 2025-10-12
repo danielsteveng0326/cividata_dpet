@@ -121,6 +121,7 @@ class AsistenteRespuestaService:
             INSTRUCCIONES PARA LA RESPUESTA:
             1. Luego de Cordialmente, o Atentamente, no pongas nada más en la respuesta corta ahí
             1.2 La respuesta debe ser formal y profesional
+            1.3 Siempre responde en español latinoamérica, recuerda que estás en el municipio de El Carmen de Viboral, Antioquia, Colombia
             2. Debe citar las normas legales aplicables (Constitución, leyes, decretos)
             3. Debe ser clara y comprensible para el ciudadano
             4. Debe responder TODOS los puntos solicitados en la petición
