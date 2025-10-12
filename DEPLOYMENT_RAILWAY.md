@@ -123,33 +123,34 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 
 ---
 
-## 📊 Paso 5: Inicializar la Base de Datos
+## 📊 Paso 5: Verificar Creación Automática del Superuser
 
-Una vez desplegado, necesitas crear el superuser y cargar datos iniciales:
+El sistema crea automáticamente el superuser durante el deployment. **No necesitas hacer nada manualmente.**
 
-### 5.1 Conectarse a la terminal de Railway
+### 5.1 Credenciales del Superuser
 
-1. En Railway, ve a tu servicio
-2. Haz clic en **"Settings"**
-3. Busca la sección **"Service"**
-4. Haz clic en **"Open Terminal"** o usa Railway CLI
+El sistema crea automáticamente un superuser con estas credenciales:
 
-### 5.2 Crear superuser
-
-```bash
-python manage.py createsuperuser
+```
+Usuario (Cédula): 1020458606
+Contraseña:       cidoli2025
 ```
 
-Ingresa:
-- **Cédula:** 1020458606
-- **Nombre completo:** Tu nombre
-- **Email:** tu-email@example.com
-- **Cargo:** Administrador del Sistema
-- **Password:** (tu contraseña segura)
+**⚠️ IMPORTANTE:** Cambia la contraseña después del primer login por seguridad.
+
+### 5.2 Verificar en los Logs
+
+En Railway, ve a **"Deployments"** → **"Logs"** y busca:
+
+```
+✅ SUPERUSER CREADO EXITOSAMENTE
+```
+
+Si ves este mensaje, el superuser fue creado correctamente.
 
 ### 5.3 Cargar datos iniciales (opcional)
 
-Si tienes el script de inicialización:
+Si quieres cargar festivos y otras dependencias, conéctate a la terminal de Railway:
 
 ```bash
 python inicializar_sistema.py

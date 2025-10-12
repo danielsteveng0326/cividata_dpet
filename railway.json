@@ -5,7 +5,7 @@
     "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate && gunicorn municipio_ia.wsgi:application",
+    "startCommand": "python manage.py migrate && python create_superuser.py && gunicorn municipio_ia.wsgi:application",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

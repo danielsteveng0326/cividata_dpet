@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 Script para inicializar el sistema con datos básicos:
+- Crear superuser (administrador)
 - Crear dependencia Jefe Jurídica (111)
 - Cargar festivos nacionales de Colombia para 2025
 - Actualizar peticiones existentes con dependencia y vencimiento
@@ -13,9 +14,66 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'municipio_ia.settings')
 django.setup()
 
-from peticiones.models import Dependencia, DiaNoHabil, Peticion
+from peticiones.models import Dependencia, DiaNoHabil, Peticion, Usuario
 from peticiones.services.dias_habiles_service import DiasHabilesService
 from datetime import date
+
+
+def crear_superuser():
+    """Crear el superuser si no existe"""
+    print("\n=== Creando Superuser ===")
+    
+    cedula = '1020458606'
+    
+    # Verificar si el usuario ya existe
+    if Usuario.objects.filter(cedula=cedula).exists():
+        print(f"✓ El superuser con cédula {cedula} ya existe.")
+        return Usuario.objects.get(cedula=cedula)
+    
+    # Primero crear la dependencia Jefe Jurídica
+    dependencia_jefe, _ = Dependencia.objects.get_or_create(
+        prefijo='111',
+        defaults={
+            'nombre_oficina': 'Jefe Jurídica',
+            'ciudad': 'El Carmen de Bolívar',
+            'activa': True
+        }
+    )
+    
+    # Crear el superuser
+    try:
+        superuser = Usuario.objects.create_superuser(
+            cedula=cedula,
+            nombre_completo='Administrador del Sistema',
+            email='admin@municipio.gov.co',
+            cargo='Administrador',
+            password='cidoli2025',
+            dependencia=dependencia_jefe
+        )
+        
+        superuser.is_staff = True
+        superuser.is_superuser = True
+        superuser.is_active = True
+        superuser.save()
+        
+        print(f"""
+╔═══════════════════════════════════════════════════════════╗
+║          ✅ SUPERUSER CREADO EXITOSAMENTE                ║
+╠═══════════════════════════════════════════════════════════╣
+║  Cédula:    {cedula}                              ║
+║  Nombre:    Administrador del Sistema                     ║
+║  Email:     admin@municipio.gov.co                        ║
+║  Password:  cidoli2025                                    ║
+║  Cargo:     Administrador                                 ║
+║  Dependencia: Jefe Jurídica (111)                         ║
+╚═══════════════════════════════════════════════════════════╝
+        """)
+        
+        return superuser
+        
+    except Exception as e:
+        print(f"❌ Error al crear superuser: {str(e)}")
+        raise
 
 def crear_dependencia_jefe_juridica():
     """Crear la dependencia Jefe Jurídica con prefijo 111"""
@@ -155,6 +213,9 @@ def main():
     print("=" * 60)
     
     try:
+        # 0. Crear superuser (administrador)
+        crear_superuser()
+        
         # 1. Crear dependencia Jefe Jurídica
         crear_dependencia_jefe_juridica()
         
@@ -170,11 +231,15 @@ def main():
         print("\n" + "=" * 60)
         print("✓ INICIALIZACIÓN COMPLETADA EXITOSAMENTE")
         print("=" * 60)
+        print("\nCredenciales de acceso:")
+        print("  Usuario (Cédula): 1020458606")
+        print("  Contraseña: cidoli2025")
         print("\nPróximos pasos:")
-        print("1. Accede al sistema como administrador")
+        print("1. Accede al sistema con las credenciales de arriba")
         print("2. Ve a 'Días No Hábiles' para agregar días personalizados")
-        print("3. Asigna usuarios a la dependencia Jefe Jurídica (111)")
+        print("3. Crea usuarios para otras dependencias")
         print("4. Crea nuevas peticiones para probar el sistema")
+        print("\n⚠️  IMPORTANTE: Cambia la contraseña después del primer login")
         
     except Exception as e:
         print(f"\n❌ Error durante la inicialización: {str(e)}")
