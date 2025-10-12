@@ -1,12 +1,15 @@
 # views.py - ARCHIVO COMPLETO ACTUALIZADO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView
+from datetime import timedelta
 from .models import Peticion, ProcesamientoIA
 from .forms import PeticionForm
 from .services.gemini_service import GeminiTranscriptionService
@@ -18,29 +21,73 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+@login_required
 def index(request):
     """Vista principal con estadísticas"""
-    total_peticiones = Peticion.objects.count()
-    sin_responder = Peticion.objects.filter(estado='sin_responder').count()
-    respondidas = Peticion.objects.filter(estado='respondido').count()
+    from datetime import date
+    from .services.dias_habiles_service import DiasHabilesService
     
-    peticiones_recientes = Peticion.objects.order_by('-fecha_radicacion')[:5]
+    # Filtrar peticiones según dependencia del usuario
+    # Si es Jefe Jurídica (dependencia 111) o superuser, puede ver todas
+    if (request.user.dependencia and request.user.dependencia.prefijo == '111') or \
+       (request.user.cedula == '1020458606' and request.user.is_superuser):
+        peticiones_queryset = Peticion.objects.all()
+    else:
+        # Solo ver peticiones de su dependencia
+        peticiones_queryset = Peticion.objects.filter(dependencia=request.user.dependencia)
+    
+    total_peticiones = peticiones_queryset.count()
+    sin_responder = peticiones_queryset.filter(estado='sin_responder').count()
+    respondidas = peticiones_queryset.filter(estado='respondido').count()
+    
+    # Calcular peticiones próximas a vencer (menos de 3 días hábiles restantes)
+    hoy = date.today()
+    proximas_vencer = 0
+    
+    # Obtener peticiones sin responder con fecha de vencimiento
+    peticiones_sin_responder = peticiones_queryset.filter(
+        estado='sin_responder',
+        fecha_vencimiento__isnull=False
+    )
+    
+    for peticion in peticiones_sin_responder:
+        # Calcular días hábiles restantes
+        dias_restantes = DiasHabilesService.contar_dias_habiles_entre_fechas(hoy, peticion.fecha_vencimiento)
+        
+        # Si quedan 3 días hábiles o menos, está próxima a vencer
+        if 0 <= dias_restantes <= 3:
+            proximas_vencer += 1
+    
+    peticiones_recientes = peticiones_queryset.order_by('-fecha_radicacion')[:5]
     
     context = {
         'total_peticiones': total_peticiones,
         'sin_responder': sin_responder,
         'respondidas': respondidas,
+        'proximas_vencer': proximas_vencer,
         'peticiones_recientes': peticiones_recientes,
     }
     return render(request, 'peticiones/index.html', context)
 
 
+@login_required
 def crear_peticion(request):
     """Vista para crear nueva petición"""
     if request.method == 'POST':
-        form = PeticionForm(request.POST, request.FILES)
+        form = PeticionForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
-            peticion = form.save()
+            peticion = form.save(commit=False)
+            
+            # Asignar dependencia automáticamente
+            # Si es Jefe Jurídica (111), puede asignar manualmente
+            if request.user.dependencia and request.user.dependencia.prefijo == '111':
+                # La dependencia ya viene del formulario (asignación manual)
+                pass
+            else:
+                # Asignar automáticamente la dependencia del usuario
+                peticion.dependencia = request.user.dependencia
+            
+            peticion.save()
             
             # Procesar PDF con IA en segundo plano
             def procesar_en_background():
@@ -59,12 +106,12 @@ def crear_peticion(request):
             )
             return redirect('detalle_peticion', radicado=peticion.radicado)
     else:
-        form = PeticionForm()
+        form = PeticionForm(user=request.user)
     
     return render(request, 'peticiones/crear_peticion.html', {'form': form})
 
 
-class ListaPeticiones(ListView):
+class ListaPeticiones(LoginRequiredMixin, ListView):
     """Vista para listar todas las peticiones"""
     model = Peticion
     template_name = 'peticiones/lista_peticiones.html'
@@ -72,7 +119,15 @@ class ListaPeticiones(ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        queryset = Peticion.objects.all()
+        # Filtrar por dependencia del usuario
+        # Si es Jefe Jurídica (111) o superuser, puede ver todas
+        if (self.request.user.dependencia and self.request.user.dependencia.prefijo == '111') or \
+           (self.request.user.cedula == '1020458606' and self.request.user.is_superuser):
+            # Jefe Jurídica o superuser pueden ver todas las peticiones
+            queryset = Peticion.objects.select_related('dependencia').all()
+        else:
+            # Solo ver peticiones de su dependencia
+            queryset = Peticion.objects.select_related('dependencia').filter(dependencia=self.request.user.dependencia)
         
         # Filtros de búsqueda
         search = self.request.GET.get('search')
@@ -390,15 +445,28 @@ def descargar_respuesta_word(request, radicado):
             # Obtener el contenido de la respuesta del POST
             data = json.loads(request.body)
             contenido_respuesta = data.get('contenido_respuesta', '')
-            ciudad = data.get('ciudad', 'Ciudad')
-            nombre_funcionario = data.get('nombre_funcionario', 'Funcionario Responsable')
-            cargo_funcionario = data.get('cargo_funcionario', 'Cargo del Funcionario')
             
             if not contenido_respuesta:
                 return JsonResponse({
                     'success': False,
                     'error': 'No se proporcionó contenido para la respuesta'
                 })
+            
+            # Obtener datos del usuario autenticado
+            if not request.user.is_authenticated:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Debe iniciar sesión para generar documentos'
+                })
+            
+            usuario = request.user
+            # Obtener ciudad de la dependencia, o usar valor por defecto
+            if usuario.dependencia and usuario.dependencia.ciudad:
+                ciudad = usuario.dependencia.ciudad
+            else:
+                ciudad = 'Ciudad'
+            nombre_funcionario = usuario.nombre_completo
+            cargo_funcionario = usuario.cargo
             
             # Ruta de la plantilla
             plantilla_path = os.path.join(settings.BASE_DIR, 'plantillas_word', 'plantilla_respuesta_peticion.docx')

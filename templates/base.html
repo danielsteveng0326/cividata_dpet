@@ -43,6 +43,24 @@
                         <a href="{% url 'index' %}"><img src='https://i.postimg.cc/dkNcQW5b/logoelcarmen.png' border='0' alt='logoelcarmen'/></a>
                     </h4>
                     
+                    <!-- Información del Usuario -->
+                    {% if user.is_authenticated %}
+                    <div class="card bg-white bg-opacity-10 text-white mb-3">
+                        <div class="card-body p-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle fa-2x me-2"></i>
+                                <div>
+                                    <small class="d-block"><strong>{{ user.nombre_completo }}</strong></small>
+                                    <small class="d-block opacity-75">{{ user.cargo }}</small>
+                                    {% if user.dependencia %}
+                                    <small class="d-block opacity-75">{{ user.dependencia.nombre_oficina }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
                     <nav class="nav flex-column">
                         <a class="nav-link" href="{% url 'index' %}">
                             <i class="fas fa-home"></i> Dashboard
@@ -53,9 +71,33 @@
                         <a class="nav-link" href="{% url 'lista_peticiones' %}">
                             <i class="fas fa-list"></i> Listar Peticiones
                         </a>
+                        
+                        {% if user.dependencia and user.dependencia.prefijo == '111' or user.cedula == '1020458606' and user.is_superuser %}
                         <hr class="text-white">
+                        <small class="text-white opacity-75 px-3">ADMINISTRACIÓN</small>
+                        <a class="nav-link" href="{% url 'lista_usuarios' %}">
+                            <i class="fas fa-users"></i> Usuarios
+                        </a>
+                        <a class="nav-link" href="{% url 'lista_dependencias' %}">
+                            <i class="fas fa-building"></i> Dependencias
+                        </a>
+                        <a class="nav-link" href="{% url 'calendario_dias_no_habiles' %}">
+                            <i class="fas fa-calendar-times"></i> Días No Hábiles
+                        </a>
+                        
+                        {% if user.cedula == '1020458606' and user.is_superuser %}
                         <a class="nav-link" href="/admin/">
-                            <i class="fas fa-cog"></i> Administración
+                            <i class="fas fa-cog"></i> Admin Django
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                        
+                        <hr class="text-white">
+                        <a class="nav-link" href="{% url 'cambiar_contrasena' %}">
+                            <i class="fas fa-key"></i> Cambiar Contraseña
+                        </a>
+                        <a class="nav-link" href="{% url 'logout' %}">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                         </a>
                     </nav>
                 </div>

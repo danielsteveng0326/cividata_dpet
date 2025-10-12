@@ -142,6 +142,9 @@ class AsistenteRespuestaService:
             7. No pongas información del servidor que está respondiendo ya que éste ya está conectado por base de datos
             8. No uses **
             9. Nunca dejes información por completar ni vacía
+            10. luego de la despedida no pongas nada más
+            11. No pongas informacion al final del servidor ni nada
+            12. No pongas información adicional que no sea la respuesta
 
             ELEMENTOS QUE NO VAN EN LA RESPUESTA:
             1. No tengas en cuenta la ciudad, ya está conectada previamente por base de datos

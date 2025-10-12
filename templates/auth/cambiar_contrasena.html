@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Cambiar Contraseña{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-key"></i> Cambiar Contraseña
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if user.debe_cambiar_contrasena %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Atención:</strong> Por seguridad, debes cambiar tu contraseña temporal.
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="password_actual" class="form-label">
+                            <i class="fas fa-lock"></i> Contraseña Actual
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password_actual" 
+                               name="password_actual" 
+                               required 
+                               autofocus>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password_nueva" class="form-label">
+                            <i class="fas fa-key"></i> Nueva Contraseña
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password_nueva" 
+                               name="password_nueva" 
+                               placeholder="Mínimo 8 caracteres"
+                               required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password_confirmacion" class="form-label">
+                            <i class="fas fa-check-circle"></i> Confirmar Nueva Contraseña
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password_confirmacion" 
+                               name="password_confirmacion" 
+                               placeholder="Repite la nueva contraseña"
+                               required>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Requisitos de la contraseña:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Mínimo 8 caracteres</li>
+                            <li>Se recomienda usar mayúsculas, minúsculas, números y símbolos</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Cambiar Contraseña
+                        </button>
+                        {% if not user.debe_cambiar_contrasena %}
+                        <a href="{% url 'index' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

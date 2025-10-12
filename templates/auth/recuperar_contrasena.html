@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña - Sistema de Peticiones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .recovery-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            max-width: 500px;
+            width: 100%;
+        }
+        .recovery-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .recovery-body {
+            padding: 40px;
+        }
+        .btn-recovery {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="recovery-card">
+                    <div class="recovery-header">
+                        <i class="fas fa-key fa-3x mb-3"></i>
+                        <h3>Recuperar Contraseña</h3>
+                    </div>
+                    <div class="recovery-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope"></i> Correo Electrónico
+                                </label>
+                                <input type="email" 
+                                       class="form-control form-control-lg" 
+                                       id="email" 
+                                       name="email" 
+                                       placeholder="correo@ejemplo.com"
+                                       required 
+                                       autofocus>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="submit" class="btn btn-recovery btn-lg">
+                                    <i class="fas fa-paper-plane"></i> Enviar Enlace de Recuperación
+                                </button>
+                                <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-arrow-left"></i> Volver al Login
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Usuario{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus"></i> Registrar Nuevo Usuario
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Se generará una contraseña temporal que será enviada al correo del usuario.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="cedula" class="form-label">
+                                <i class="fas fa-id-card"></i> Número de Cédula
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="cedula" 
+                                   name="cedula" 
+                                   placeholder="Ej: 1234567890"
+                                   required 
+                                   autofocus>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre_completo" class="form-label">
+                                <i class="fas fa-user"></i> Nombre Completo
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nombre_completo" 
+                                   name="nombre_completo" 
+                                   placeholder="Ej: Juan Pérez García"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="cargo" class="form-label">
+                                <i class="fas fa-briefcase"></i> Cargo
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="cargo" 
+                                   name="cargo" 
+                                   placeholder="Ej: Secretario de Gobierno"
+                                   required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="dependencia" class="form-label">
+                                <i class="fas fa-building"></i> Dependencia
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="dependencia" name="dependencia" required>
+                                <option value="">Seleccione una dependencia</option>
+                                {% for dep in dependencias %}
+                                <option value="{{ dep.prefijo }}">
+                                    {{ dep.prefijo }} - {{ dep.nombre_oficina }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Correo Electrónico
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   placeholder="correo@ejemplo.com"
+                                   required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label">
+                                <i class="fas fa-phone"></i> Teléfono
+                            </label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="telefono" 
+                                   name="telefono" 
+                                   placeholder="Ej: 3001234567">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'lista_usuarios' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Registrar Usuario
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

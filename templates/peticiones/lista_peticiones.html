@@ -69,10 +69,11 @@
                         <tr>
                             <th>Radicado</th>
                             <th>Peticionario</th>
+                            <th>Dependencia</th>
                             <th>Fuente</th>
                             <th>Estado</th>
-                            <th>IA</th>
-                            <th>Fecha</th>
+                            <th>Fecha Radicación</th>
+                            <th>Vence</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -93,6 +94,16 @@
                                 {% endif %}
                             </td>
                             <td>
+                                {% if peticion.dependencia %}
+                                    <small>
+                                        <strong>{{ peticion.dependencia.prefijo }}</strong><br>
+                                        {{ peticion.dependencia.nombre_oficina|truncatewords:3 }}
+                                    </small>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 <span class="badge bg-secondary">
                                     {{ peticion.get_fuente_display }}
                                 </span>
@@ -105,21 +116,28 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if peticion.transcripcion_completa %}
-                                    <span class="badge bg-success" title="Procesado">
-                                        <i class="fas fa-check"></i>
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-warning" title="Procesando">
-                                        <i class="fas fa-clock"></i>
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td>
                                 <small>
                                     {{ peticion.fecha_radicacion|date:"d/m/Y" }}<br>
                                     {{ peticion.fecha_radicacion|date:"H:i" }}
                                 </small>
+                            </td>
+                            <td>
+                                {% if peticion.fecha_vencimiento %}
+                                    <small>
+                                        {{ peticion.fecha_vencimiento|date:"d/m/Y" }}
+                                        {% load tz %}
+                                        {% now "Y-m-d" as hoy %}
+                                        {% if peticion.estado == 'sin_responder' %}
+                                            {% if peticion.fecha_vencimiento|date:"Y-m-d" < hoy %}
+                                                <br><span class="badge bg-danger">Vencida</span>
+                                            {% elif peticion.fecha_vencimiento|date:"Y-m-d" == hoy %}
+                                                <br><span class="badge bg-warning">Hoy</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
                             </td>
                             <td>
                                 <div class="btn-group" role="group">

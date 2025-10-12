@@ -1,19 +1,20 @@
-# requirements.txt - CORREGIDO para Railway
+# requirements.txt - Para Railway
 Django==5.1.2
 google-generativeai==0.3.2
 PyPDF2==3.0.1
 python-decouple==3.8
-Pillow>=10.4.0  # Versión más reciente compatible
+Pillow>=10.4.0
 
 # Para desarrollo adicional (opcional)
 django-extensions==3.2.3
 
 # Para producción
 gunicorn==21.2.0
-whitenoise==6.6.0  # Para servir archivos estáticos en producción
-dj-database-url==2.1.0  # Para configuración automática de base de datos
+whitenoise==6.6.0
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9
 
-# Nuevas dependencias para el asistente IA
+# Dependencias para el asistente IA
 beautifulsoup4==4.12.2
 markdown==3.5.1
 python-docx==1.1.0

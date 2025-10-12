@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-users"></i> Gestión de Usuarios
+    </h1>
+    <a href="{% url 'registro_usuario' %}" class="btn btn-success">
+        <i class="fas fa-user-plus"></i> Nuevo Usuario
+    </a>
+</div>
+
+<!-- Buscador -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <input type="text" 
+                       class="form-control" 
+                       name="search" 
+                       placeholder="Buscar por cédula, nombre o correo..." 
+                       value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de Usuarios -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Cédula</th>
+                        <th>Nombre</th>
+                        <th>Cargo</th>
+                        <th>Dependencia</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.cedula }}</td>
+                        <td>
+                            <strong>{{ usuario.nombre_completo }}</strong>
+                            {% if usuario.is_staff %}
+                            <span class="badge bg-danger ms-1">Admin</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ usuario.cargo }}</td>
+                        <td>
+                            {% if usuario.dependencia %}
+                                {{ usuario.dependencia.nombre_oficina }}
+                            {% else %}
+                                <span class="text-muted">Sin asignar</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.telefono|default:"-" }}</td>
+                        <td>
+                            {% if usuario.is_active %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                            {% if usuario.debe_cambiar_contrasena %}
+                                <span class="badge bg-warning">Cambio pendiente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>No se encontraron usuarios</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'index' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+</div>
+{% endblock %}

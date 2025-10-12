@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Dependencia{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-building"></i> Crear Nueva Dependencia
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="prefijo" class="form-label">
+                            <i class="fas fa-hashtag"></i> Prefijo Numérico
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="prefijo" 
+                               name="prefijo" 
+                               placeholder="Ej: 001"
+                               maxlength="10"
+                               pattern="[0-9]+"
+                               title="Solo números"
+                               required 
+                               autofocus>
+                        <small class="form-text text-muted">
+                            Código numérico único (hasta 10 dígitos)
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="nombre_oficina" class="form-label">
+                            <i class="fas fa-building"></i> Nombre de la Oficina
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nombre_oficina" 
+                               name="nombre_oficina" 
+                               placeholder="Ej: Secretaría de Gobierno"
+                               required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="ciudad" class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Ciudad
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="ciudad" 
+                               name="ciudad" 
+                               placeholder="Ej: Bogotá D.C. (Opcional)">
+                        <small class="form-text text-muted">
+                            Campo opcional - se usará para documentos Word
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'lista_dependencias' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Crear Dependencia
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

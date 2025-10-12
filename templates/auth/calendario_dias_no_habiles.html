@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendario de Días No Hábiles{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-calendar-times"></i> Calendario de Días No Hábiles</h1>
+        <div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregarDia">
+                <i class="fas fa-plus"></i> Agregar Día No Hábil
+            </button>
+            <a href="{% url 'index' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Selector de Año -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label"><strong>Seleccionar Año:</strong></label>
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary" onclick="cambiarAño(-1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <input type="number" id="añoSelector" class="form-control text-center" 
+                               value="{{ año_actual }}" min="2020" max="2100">
+                        <button class="btn btn-outline-secondary" onclick="cambiarAño(1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Información:</strong> Los sábados, domingos y festivos nacionales ya están configurados automáticamente.
+                        Aquí puedes agregar días adicionales como capacitaciones, día de la familia, etc.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información sobre el calendario -->
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        <strong>Sistema de Días Hábiles Configurado</strong>
+        <p class="mb-0 mt-2">El sistema ya tiene configurados automáticamente:</p>
+        <ul class="mb-0 mt-2">
+            <li>Sábados y domingos como días NO hábiles</li>
+            <li>Festivos nacionales de Colombia</li>
+            <li>Festivos movibles según Ley Emiliani</li>
+            <li>Semana Santa (Jueves y Viernes Santo)</li>
+        </ul>
+        <p class="mb-0 mt-2">Usa la tabla de abajo para agregar días no hábiles adicionales personalizados.</p>
+    </div>
+
+    <!-- Lista de Días No Hábiles Personalizados -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5><i class="fas fa-list"></i> Días No Hábiles Personalizados del Año {{ año_actual }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaDiasNoHabiles">
+                        {% if dias_no_habiles %}
+                            {% for dia in dias_no_habiles %}
+                            <tr id="dia-{{ dia.id }}">
+                                <td>{{ dia.fecha|date:"d/m/Y" }}</td>
+                                <td>{{ dia.descripcion }}</td>
+                                <td>
+                                    {% if dia.es_festivo_nacional %}
+                                        <span class="badge bg-primary">Festivo Nacional</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Personalizado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminarDiaNoHabil({{ dia.id }})">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    No hay días no hábiles personalizados registrados para este año
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Día No Hábil -->
+<div class="modal fade" id="modalAgregarDia" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Día No Hábil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAgregarDia">
+                    <div class="mb-3">
+                        <label for="fechaDia" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="fechaDia" required>
+                        <div id="infoFecha" class="form-text"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcionDia" class="form-label">Descripción</label>
+                        <input type="text" class="form-control" id="descripcionDia" 
+                               placeholder="Ej: Día de la Familia, Capacitación, etc." required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="esFestivoNacional">
+                        <label class="form-check-label" for="esFestivoNacional">
+                            Es festivo nacional
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarDiaNoHabil()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+</style>
+
+<script>
+const meses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+function cambiarAño(delta) {
+    const añoInput = document.getElementById('añoSelector');
+    const nuevoAño = parseInt(añoInput.value) + delta;
+    añoInput.value = nuevoAño;
+    cargarCalendario();
+}
+
+function cargarCalendario() {
+    const año = document.getElementById('añoSelector').value;
+    
+    // Solo recargar la página si el año cambió
+    const urlParams = new URLSearchParams(window.location.search);
+    const añoActual = urlParams.get('año') || new Date().getFullYear();
+    
+    if (año != añoActual) {
+        window.location.href = `?año=${año}`;
+    }
+}
+
+// Función para verificar si una fecha es hábil (para el modal)
+function verificarFechaModal(fecha) {
+    if (!fecha) return;
+    
+    fetch(`/verificar-dia-habil/?fecha=${fecha}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const infoDiv = document.getElementById('infoFecha');
+                if (data.es_habil) {
+                    infoDiv.innerHTML = '<span class="text-success">✓ Esta fecha es actualmente un día hábil</span>';
+                } else {
+                    infoDiv.innerHTML = `<span class="text-warning">⚠ Esta fecha ya está marcada como: ${data.descripcion}</span>`;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error verificando fecha:', error);
+        });
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Listener para cambio de año
+    const añoSelector = document.getElementById('añoSelector');
+    if (añoSelector) {
+        añoSelector.addEventListener('change', cargarCalendario);
+    }
+    
+    // Listener para verificar fecha en el modal
+    const fechaInput = document.getElementById('fechaDia');
+    if (fechaInput) {
+        fechaInput.addEventListener('change', function() {
+            verificarFechaModal(this.value);
+        });
+    }
+});
+
+function guardarDiaNoHabil() {
+    const fecha = document.getElementById('fechaDia').value;
+    const descripcion = document.getElementById('descripcionDia').value;
+    const esFestivo = document.getElementById('esFestivoNacional').checked;
+    
+    if (!fecha || !descripcion) {
+        alert('Por favor complete todos los campos');
+        return;
+    }
+    
+    fetch('/agregar-dia-no-habil/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            fecha: fecha,
+            descripcion: descripcion,
+            es_festivo_nacional: esFestivo
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Día no hábil agregado correctamente');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar el día no hábil');
+    });
+}
+
+function eliminarDiaNoHabil(id) {
+    if (!confirm('¿Está seguro de eliminar este día no hábil?')) {
+        return;
+    }
+    
+    fetch(`/eliminar-dia-no-habil/${id}/`, {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById(`dia-${id}`).remove();
+            alert('Día no hábil eliminado correctamente');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al eliminar el día no hábil');
+    });
+}
+
+// No cargar calendario automáticamente, ya se muestra desde el servidor
+</script>
+{% endblock %}

@@ -1,13 +1,32 @@
 # forms.py
 from django import forms
-from .models import Peticion
+from .models import Peticion, Dependencia
 
 
 class PeticionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Si el usuario es Jefe Jurídica (dependencia 111), mostrar campo dependencia
+        if self.user and self.user.dependencia and self.user.dependencia.prefijo == '111':
+            self.fields['dependencia'] = forms.ModelChoiceField(
+                queryset=Dependencia.objects.filter(activa=True).order_by('nombre_oficina'),
+                required=True,
+                widget=forms.Select(attrs={'class': 'form-control'}),
+                label='Dependencia Responsable',
+                help_text='Seleccione la dependencia que debe responder esta petición'
+            )
+        else:
+            # Para otros usuarios, no mostrar el campo (se asigna automáticamente)
+            if 'dependencia' in self.fields:
+                del self.fields['dependencia']
+    
     class Meta:
         model = Peticion
         fields = [
             'fecha_radicacion',
+            'dependencia',
             'peticionario_nombre', 
             'peticionario_id', 
             'peticionario_telefono',
