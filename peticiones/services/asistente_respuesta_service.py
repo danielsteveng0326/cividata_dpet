@@ -130,18 +130,26 @@ class AsistenteRespuestaService:
             9. No uses **
             10. En la firma pon el nombre del funcionario y el cargo (extráelo de su nombre de inicio de sesión)
             11. Nunca dejes información por completar ni vacía
-            12. Toma la información del peticionario y úsala para la respuesta
-            13. Siempre usa la fecha actual (proporcionada por la red)
 
             ESTRUCTURA SUGERIDA:
-            1. Saludo cordial y referencia al radicado
+            no empieces con la información preliminar, pasa a la respuesta directamente
+            1. Empieza por el Saludo cordial al peticionario
             2. Respuesta punto por punto
             3. Fundamentos legales (si aplica)
             4. Pasos a seguir (si aplica)
             5. Información de contacto para dudas (si aplica)
-            6. Despedida formal 
-            7. No uses **
-            8. Nunca dejes información por completar ni vacía
+            6. Despedida formal (acá termina la respuesta no sigas con información adicional)
+            7. No pongas información del servidor que está respondiendo ya que éste ya está conectado por base de datos
+            8. No uses **
+            9. Nunca dejes información por completar ni vacía
+
+            ELEMENTOS QUE NO VAN EN LA RESPUESTA:
+            1. No tengas en cuenta la ciudad, ya está conectada previamente por base de datos
+            2. No pongas el asunto ni la información preliminar
+            3. No pongas la fecha, ya está conectada previamente por base de datos
+            4. No pongas el nombre del funcionario, ya está conectada previamente por base de datos
+            5. No pongas el cargo del funcionario, ya está conectada previamente por base de datos
+            6. No pongas el radicado, ya está conectada previamente por base de datos
 
             GENERA UNA RESPUESTA COMPLETA Y LISTA PARA ENVIAR:
             """

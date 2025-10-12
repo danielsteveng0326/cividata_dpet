@@ -1,0 +1,7 @@
+# Ignorar archivos temporales de Word
+~$*.docx
+*.tmp
+
+# Mantener el README y la plantilla base
+!README.md
+!plantilla_respuesta_peticion.docx

@@ -373,22 +373,26 @@ def historial_asistente(request, radicado):
 @csrf_exempt
 def descargar_respuesta_word(request, radicado):
     """
-    Descarga la respuesta generada en formato Word (.docx) con plantilla
+    Descarga la respuesta generada en formato Word (.docx) usando plantilla institucional
     """
     if request.method == 'POST':
         try:
             from docx import Document
-            from docx.shared import Pt, Inches
-            from docx.enum.text import WD_ALIGN_PARAGRAPH
             from django.http import HttpResponse
             from datetime import datetime
+            from django.conf import settings
             import io
+            import os
+            import locale
             
             peticion = get_object_or_404(Peticion, radicado=radicado)
             
             # Obtener el contenido de la respuesta del POST
             data = json.loads(request.body)
             contenido_respuesta = data.get('contenido_respuesta', '')
+            ciudad = data.get('ciudad', 'Ciudad')
+            nombre_funcionario = data.get('nombre_funcionario', 'Funcionario Responsable')
+            cargo_funcionario = data.get('cargo_funcionario', 'Cargo del Funcionario')
             
             if not contenido_respuesta:
                 return JsonResponse({
@@ -396,66 +400,74 @@ def descargar_respuesta_word(request, radicado):
                     'error': 'No se proporcionó contenido para la respuesta'
                 })
             
-            # Crear documento Word
-            doc = Document()
+            # Ruta de la plantilla
+            plantilla_path = os.path.join(settings.BASE_DIR, 'plantillas_word', 'plantilla_respuesta_peticion.docx')
             
-            # Configurar márgenes
-            sections = doc.sections
-            for section in sections:
-                section.top_margin = Inches(1)
-                section.bottom_margin = Inches(1)
-                section.left_margin = Inches(1)
-                section.right_margin = Inches(1)
+            # Verificar que existe la plantilla
+            if not os.path.exists(plantilla_path):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No se encontró la plantilla de Word. Por favor contacte al administrador.'
+                })
             
-            # Encabezado del documento
-            header = doc.add_paragraph()
-            header.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = header.add_run('RESPUESTA AL DERECHO DE PETICIÓN')
-            run.bold = True
-            run.font.size = Pt(14)
+            # Cargar la plantilla
+            doc = Document(plantilla_path)
             
-            # Espacio
-            doc.add_paragraph()
+            # Configurar locale para fechas en español
+            try:
+                locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+            except:
+                try:
+                    locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')
+                except:
+                    pass  # Si no se puede configurar, usar formato por defecto
             
-            # Información del radicado
-            info_radicado = doc.add_paragraph()
-            info_radicado.add_run(f'Radicado: ').bold = True
-            info_radicado.add_run(peticion.radicado)
+            # Preparar datos para reemplazo
+            fecha_actual = datetime.now()
+            try:
+                fecha_formateada = fecha_actual.strftime('%d de %B de %Y')
+            except:
+                # Fallback si locale no funciona
+                meses = {
+                    1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril',
+                    5: 'mayo', 6: 'junio', 7: 'julio', 8: 'agosto',
+                    9: 'septiembre', 10: 'octubre', 11: 'noviembre', 12: 'diciembre'
+                }
+                fecha_formateada = f"{fecha_actual.day} de {meses[fecha_actual.month]} de {fecha_actual.year}"
             
-            # Fecha
-            info_fecha = doc.add_paragraph()
-            info_fecha.add_run(f'Fecha de Respuesta: ').bold = True
-            info_fecha.add_run(datetime.now().strftime('%d de %B de %Y'))
+            # Diccionario de reemplazos
+            reemplazos = {
+                '{{CIUDAD}}': ciudad,
+                '{{FECHA}}': fecha_formateada,
+                '{{NOMBRE_PETICIONARIO}}': peticion.peticionario_nombre or 'Ciudadano(a)',
+                '{{DIRECCION_PETICIONARIO}}': peticion.peticionario_direccion or 'Dirección no especificada',
+                '{{RADICADO}}': peticion.radicado,
+                '{{CUERPO_RESPUESTA}}': contenido_respuesta,
+                '{{NOMBRE_FUNCIONARIO}}': nombre_funcionario,
+                '{{CARGO_FUNCIONARIO}}': cargo_funcionario
+            }
             
-            # Peticionario
-            if peticion.peticionario_nombre:
-                info_peticionario = doc.add_paragraph()
-                info_peticionario.add_run(f'Peticionario: ').bold = True
-                info_peticionario.add_run(peticion.peticionario_nombre)
+            # Función para reemplazar texto en párrafos
+            def reemplazar_en_parrafo(parrafo, reemplazos):
+                for clave, valor in reemplazos.items():
+                    if clave in parrafo.text:
+                        # Guardar el formato del párrafo
+                        inline = parrafo.runs
+                        for i in range(len(inline)):
+                            if clave in inline[i].text:
+                                # Reemplazar el texto manteniendo el formato
+                                inline[i].text = inline[i].text.replace(clave, valor)
             
-            # Línea separadora
-            doc.add_paragraph('_' * 80)
+            # Reemplazar en todos los párrafos del documento
+            for parrafo in doc.paragraphs:
+                reemplazar_en_parrafo(parrafo, reemplazos)
             
-            # Espacio
-            doc.add_paragraph()
-            
-            # Contenido de la respuesta
-            # Dividir por párrafos y agregar al documento
-            parrafos = contenido_respuesta.split('\n')
-            for parrafo in parrafos:
-                if parrafo.strip():
-                    p = doc.add_paragraph(parrafo.strip())
-                    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-                    p_format = p.paragraph_format
-                    p_format.line_spacing = 1.5
-                    p_format.space_after = Pt(6)
-                    
-                    # Aplicar formato a todo el texto del párrafo
-                    for run in p.runs:
-                        run.font.name = 'Times New Roman'
-                        run.font.size = Pt(12)
-                else:
-                    doc.add_paragraph()  # Línea en blanco
+            # Reemplazar en tablas si las hay
+            for tabla in doc.tables:
+                for fila in tabla.rows:
+                    for celda in fila.cells:
+                        for parrafo in celda.paragraphs:
+                            reemplazar_en_parrafo(parrafo, reemplazos)
             
             # Guardar documento en memoria
             file_stream = io.BytesIO()

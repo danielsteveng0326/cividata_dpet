@@ -240,11 +240,69 @@
                 <button type="button" class="btn btn-secondary" onclick="regenerarRespuesta()">
                     <i class="fas fa-redo"></i> Regenerar
                 </button>
-                <button type="button" class="btn btn-primary" onclick="descargarRespuesta()">
-                    <i class="fas fa-download"></i> Descargar
+                <button type="button" class="btn btn-primary" onclick="mostrarModalDatosDescarga()">
+                    <i class="fas fa-download"></i> Descargar Word
                 </button>
                 <button type="button" class="btn btn-success" data-bs-dismiss="modal">
                     <i class="fas fa-check"></i> Finalizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Datos de Descarga -->
+<div class="modal fade" id="modalDatosDescarga" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-word"></i>
+                    Datos para el Documento
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Complete los siguientes datos para generar el documento Word:</p>
+                
+                <div class="mb-3">
+                    <label for="inputCiudad" class="form-label">
+                        <i class="fas fa-map-marker-alt"></i> Ciudad
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="inputCiudad" 
+                           placeholder="Ej: Bogotá D.C." required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="inputNombreFuncionario" class="form-label">
+                        <i class="fas fa-user-tie"></i> Nombre del Funcionario
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="inputNombreFuncionario" 
+                           placeholder="Ej: Juan Pérez García" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="inputCargoFuncionario" class="form-label">
+                        <i class="fas fa-briefcase"></i> Cargo del Funcionario
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="inputCargoFuncionario" 
+                           placeholder="Ej: Secretario de Gobierno" required>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <small>Estos datos se incluirán en el documento Word generado según la plantilla institucional.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="descargarRespuestaConDatos()">
+                    <i class="fas fa-download"></i> Generar Documento
                 </button>
             </div>
         </div>
@@ -406,8 +464,29 @@ function regenerarRespuesta() {
     }
 }
 
-function descargarRespuesta() {
+function mostrarModalDatosDescarga() {
+    // Cerrar el modal de respuesta generada
+    const modalRespuesta = bootstrap.Modal.getInstance(document.getElementById('modalRespuestaGenerada'));
+    if (modalRespuesta) {
+        modalRespuesta.hide();
+    }
+    
+    // Mostrar el modal de datos de descarga
+    const modalDatos = new bootstrap.Modal(document.getElementById('modalDatosDescarga'));
+    modalDatos.show();
+}
+
+function descargarRespuestaConDatos() {
     const respuesta = document.getElementById('respuestaGenerada').textContent;
+    const ciudad = document.getElementById('inputCiudad').value.trim();
+    const nombreFuncionario = document.getElementById('inputNombreFuncionario').value.trim();
+    const cargoFuncionario = document.getElementById('inputCargoFuncionario').value.trim();
+    
+    // Validar que todos los campos estén llenos
+    if (!ciudad || !nombreFuncionario || !cargoFuncionario) {
+        alert('Por favor complete todos los campos obligatorios.');
+        return;
+    }
     
     // Mostrar loading en botón
     const btn = event.target;
@@ -423,14 +502,19 @@ function descargarRespuesta() {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
         body: JSON.stringify({
-            contenido_respuesta: respuesta
+            contenido_respuesta: respuesta,
+            ciudad: ciudad,
+            nombre_funcionario: nombreFuncionario,
+            cargo_funcionario: cargoFuncionario
         })
     })
     .then(response => {
         if (response.ok) {
             return response.blob();
         } else {
-            throw new Error('Error al generar el documento');
+            return response.json().then(data => {
+                throw new Error(data.error || 'Error al generar el documento');
+            });
         }
     })
     .then(blob => {
@@ -444,10 +528,24 @@ function descargarRespuesta() {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+        
+        // Cerrar modal de datos
+        const modalDatos = bootstrap.Modal.getInstance(document.getElementById('modalDatosDescarga'));
+        if (modalDatos) {
+            modalDatos.hide();
+        }
+        
+        // Limpiar campos
+        document.getElementById('inputCiudad').value = '';
+        document.getElementById('inputNombreFuncionario').value = '';
+        document.getElementById('inputCargoFuncionario').value = '';
+        
+        // Mostrar mensaje de éxito
+        alert('Documento Word generado exitosamente');
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al descargar el documento Word');
+        alert('Error al descargar el documento Word: ' + error.message);
     })
     .finally(() => {
         btn.innerHTML = textoOriginal;
