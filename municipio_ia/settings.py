@@ -16,21 +16,13 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 # Railway deployment
 RAILWAY_ENVIRONMENT = config('RAILWAY_ENVIRONMENT', default=None)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
-
-# Si estamos en Railway, agregar el dominio de Railway
+# ALLOWED_HOSTS configuration
 if RAILWAY_ENVIRONMENT:
-    RAILWAY_STATIC_URL = config('RAILWAY_STATIC_URL', default='')
-    if RAILWAY_STATIC_URL:
-        ALLOWED_HOSTS.append(RAILWAY_STATIC_URL.replace('https://', '').replace('http://', ''))
-    
-    # Agregar cualquier dominio personalizado
-    RAILWAY_PUBLIC_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
-    if RAILWAY_PUBLIC_DOMAIN:
-        ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
-    
-    # Permitir el dominio .railway.app
-    ALLOWED_HOSTS.append('.railway.app')
+    # En Railway, permitir todos los dominios de Railway
+    ALLOWED_HOSTS = ['*']  # Railway maneja el routing, es seguro aquí
+else:
+    # En desarrollo local
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [

@@ -1,1 +1,1 @@
-web: python manage.py migrate && python create_superuser.py && python manage.py collectstatic --noinput && gunicorn municipio_ia.wsgi:application --bind 0.0.0.0:$PORT
+web: python manage.py migrate && python create_superuser.py && python manage.py collectstatic --noinput && gunicorn municipio_ia.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 2 --log-level info
