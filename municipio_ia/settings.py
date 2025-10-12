@@ -125,12 +125,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Configuración de seguridad para producción
 if not DEBUG:
+    # SSL/HTTPS settings
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+    
+    # Configuración para proxy reverso (Railway)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
 
 # CSRF Trusted Origins para Railway
 if RAILWAY_ENVIRONMENT:
