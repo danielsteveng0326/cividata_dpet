@@ -138,6 +138,15 @@ if RAILWAY_ENVIRONMENT:
         'https://*.railway.app',
         'https://*.up.railway.app',
     ]
+    
+    # Agregar dominios personalizados desde variable de entorno
+    custom_domains = config('CUSTOM_DOMAINS', default='')
+    if custom_domains:
+        for domain in custom_domains.split(','):
+            domain = domain.strip()
+            if domain:
+                CSRF_TRUSTED_ORIGINS.append(f'https://{domain}')
+                CSRF_TRUSTED_ORIGINS.append(f'http://{domain}')  # Por si acaso
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
