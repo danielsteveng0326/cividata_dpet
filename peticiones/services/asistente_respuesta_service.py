@@ -119,7 +119,8 @@ class AsistenteRespuestaService:
             {respuestas_formateadas}
 
             INSTRUCCIONES PARA LA RESPUESTA:
-            1. La respuesta debe ser formal y profesional
+            1. Luego de Cordialmente, o Atentamente, no pongas nada más en la respuesta corta ahí
+            1.2 La respuesta debe ser formal y profesional
             2. Debe citar las normas legales aplicables (Constitución, leyes, decretos)
             3. Debe ser clara y comprensible para el ciudadano
             4. Debe responder TODOS los puntos solicitados en la petición
@@ -130,6 +131,7 @@ class AsistenteRespuestaService:
             9. No uses **
             10. En la firma pon el nombre del funcionario y el cargo (extráelo de su nombre de inicio de sesión)
             11. Nunca dejes información por completar ni vacía
+            12. Luego de Cordialmente, o Atentamente, no pongas nada más en la respuesta corta ahí
 
             ESTRUCTURA SUGERIDA:
             no empieces con la información preliminar, pasa a la respuesta directamente
@@ -144,7 +146,7 @@ class AsistenteRespuestaService:
             9. Nunca dejes información por completar ni vacía
             10. luego de la despedida no pongas nada más
             11. No pongas informacion al final del servidor ni nada
-            12. No pongas información adicional que no sea la respuesta
+            12. No pongas información adicional que no sea la respuesta, ni pongas ALCALDE MUNICIPAL, la respuesta termina en Cordialmente, o Atentamente
 
             ELEMENTOS QUE NO VAN EN LA RESPUESTA:
             1. No tengas en cuenta la ciudad, ya está conectada previamente por base de datos
