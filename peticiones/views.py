@@ -438,7 +438,6 @@ def descargar_respuesta_word(request, radicado):
             from django.conf import settings
             import io
             import os
-            import locale
             
             peticion = get_object_or_404(Peticion, radicado=radicado)
             
@@ -481,27 +480,16 @@ def descargar_respuesta_word(request, radicado):
             # Cargar la plantilla
             doc = Document(plantilla_path)
             
-            # Configurar locale para fechas en español
-            try:
-                locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-            except:
-                try:
-                    locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')
-                except:
-                    pass  # Si no se puede configurar, usar formato por defecto
-            
             # Preparar datos para reemplazo
             fecha_actual = datetime.now()
-            try:
-                fecha_formateada = fecha_actual.strftime('%d de %B de %Y')
-            except:
-                # Fallback si locale no funciona
-                meses = {
-                    1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril',
-                    5: 'mayo', 6: 'junio', 7: 'julio', 8: 'agosto',
-                    9: 'septiembre', 10: 'octubre', 11: 'noviembre', 12: 'diciembre'
-                }
-                fecha_formateada = f"{fecha_actual.day} de {meses[fecha_actual.month]} de {fecha_actual.year}"
+            
+            # Usar diccionario de meses en español (independiente del locale del sistema)
+            meses_espanol = {
+                1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril',
+                5: 'mayo', 6: 'junio', 7: 'julio', 8: 'agosto',
+                9: 'septiembre', 10: 'octubre', 11: 'noviembre', 12: 'diciembre'
+            }
+            fecha_formateada = f"{fecha_actual.day} de {meses_espanol[fecha_actual.month]} de {fecha_actual.year}"
             
             # Diccionario de reemplazos
             reemplazos = {

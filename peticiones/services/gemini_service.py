@@ -72,7 +72,7 @@ class GeminiTranscriptionService:
             TEXTO A TRANSCRIBIR:
             {texto_extraido}
 
-            TRANSCRIPCIÓN COMPLETA Y LIMPIA:
+            TRANSCRIPCIÓN :
             """
             
             # Enviar a Gemini
