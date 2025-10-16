@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -21,12 +21,32 @@
             overflow: hidden;
             max-width: 450px;
             width: 100%;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
         .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-image: url('https://i.postimg.cc/XYkY9CZc/306A9726.jpg');
+            background-size: cover;
+            background-position: center 22%;
+            background-repeat: no-repeat;
             color: white;
             padding: 30px;
             text-align: center;
+            position: relative;
+        }
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+        .login-header > * {
+            position: relative;
+            z-index: 2;
         }
         .login-body {
             padding: 40px;
@@ -48,6 +68,14 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
             color: white;
         }
+        .logo-header {
+            max-width: 250px;
+            height: auto;
+            margin-bottom: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
@@ -56,8 +84,8 @@
             <div class="col-md-6">
                 <div class="login-card">
                     <div class="login-header">
-                        <i class="fas fa-file-alt fa-3x mb-3"></i>
-                        <h3>Sistema de Gestión de Peticiones</h3>
+                        <img src='https://i.postimg.cc/NMT8xDRJ/logoelcarmen-1.png' class='logo-header' alt='Logo El Carmen'/>
+                        <h3>Sistema Inteligente de Gestión de Peticiones</h3>
                         <p class="mb-0">Iniciar Sesión</p>
                     </div>
                     <div class="login-body">
@@ -114,10 +142,10 @@
                     </div>
                 </div>
                 
-                <div class="text-center mt-3 text-white">
+                <div class="text-center mt-3 text-black">
                     <small>
                         <i class="fas fa-shield-alt"></i> 
-                        Sistema seguro y protegido
+                        creado por civiData.co
                     </small>
                 </div>
             </div>
