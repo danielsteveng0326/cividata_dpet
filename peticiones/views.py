@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView
@@ -19,6 +19,22 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def puede_ver_peticion(user, peticion):
+    """
+    Verifica si un usuario puede ver una petición específica.
+    - Oficina Jurídica (prefijo 111) puede ver TODAS las peticiones
+    - Superuser puede ver TODAS las peticiones
+    - Otras dependencias solo pueden ver sus propias peticiones
+    """
+    # Oficina Jurídica o superuser pueden ver todo
+    if (user.dependencia and user.dependencia.prefijo == '111') or \
+       (user.cedula == '1020458606' and user.is_superuser):
+        return True
+    
+    # Otras dependencias solo ven sus propias peticiones
+    return peticion.dependencia == user.dependencia
 
 
 @login_required
@@ -78,14 +94,8 @@ def crear_peticion(request):
         if form.is_valid():
             peticion = form.save(commit=False)
             
-            # Asignar dependencia automáticamente
-            # Si es Jefe Jurídica (111), puede asignar manualmente
-            if request.user.dependencia and request.user.dependencia.prefijo == '111':
-                # La dependencia ya viene del formulario (asignación manual)
-                pass
-            else:
-                # Asignar automáticamente la dependencia del usuario
-                peticion.dependencia = request.user.dependencia
+            # Asignar automáticamente la dependencia del usuario logueado
+            peticion.dependencia = request.user.dependencia
             
             peticion.save()
             
@@ -156,9 +166,15 @@ class ListaPeticiones(LoginRequiredMixin, ListView):
         return context
 
 
+@login_required
 def detalle_peticion(request, radicado):
     """Vista detalle de una petición específica"""
     peticion = get_object_or_404(Peticion, radicado=radicado)
+    
+    # Verificar permisos de acceso
+    if not puede_ver_peticion(request.user, peticion):
+        messages.error(request, 'No tienes permiso para ver esta petición.')
+        return redirect('index')
     
     # Obtener información del procesamiento IA si existe
     try:
@@ -173,11 +189,16 @@ def detalle_peticion(request, radicado):
     return render(request, 'peticiones/detalle_peticion.html', context)
 
 
+@login_required
 @csrf_exempt
 def reprocesar_peticion(request, radicado):
     """Vista AJAX para reprocesar una petición con IA"""
     if request.method == 'POST':
         peticion = get_object_or_404(Peticion, radicado=radicado)
+        
+        # Verificar permisos de acceso
+        if not puede_ver_peticion(request.user, peticion):
+            return JsonResponse({'success': False, 'message': 'No tienes permiso para esta acción'})
         
         def reprocesar_en_background():
             gemini_service = GeminiTranscriptionService()
@@ -196,6 +217,7 @@ def reprocesar_peticion(request, radicado):
     return JsonResponse({'success': False, 'message': 'Método no permitido'})
 
 
+@login_required
 def cambiar_estado_peticion(request, radicado):
     """Vista para cambiar el estado de una petición con archivos adjuntos"""
     if request.method == 'POST':
@@ -203,6 +225,11 @@ def cambiar_estado_peticion(request, radicado):
         from django.utils import timezone
         
         peticion = get_object_or_404(Peticion, radicado=radicado)
+        
+        # Verificar permisos de acceso
+        if not puede_ver_peticion(request.user, peticion):
+            messages.error(request, 'No tienes permiso para modificar esta petición.')
+            return redirect('index')
         nuevo_estado = request.POST.get('nuevo_estado')
         
         if nuevo_estado == 'respondido':
@@ -239,9 +266,15 @@ def cambiar_estado_peticion(request, radicado):
     return redirect('detalle_peticion', radicado=radicado)
 
 
+@login_required
 def editar_peticionario(request, radicado):
     """Vista para editar los datos del peticionario"""
     peticion = get_object_or_404(Peticion, radicado=radicado)
+    
+    # Verificar permisos de acceso
+    if not puede_ver_peticion(request.user, peticion):
+        messages.error(request, 'No tienes permiso para editar esta petición.')
+        return redirect('index')
     
     if request.method == 'POST':
         form = EditarPeticionarioForm(request.POST, instance=peticion)
@@ -285,11 +318,16 @@ def editar_peticionario(request, radicado):
     return render(request, 'peticiones/editar_peticionario.html', context)
 
 
+@login_required
 @csrf_exempt
 def obtener_datos_peticionario(request, radicado):
     """Vista AJAX para obtener los datos actuales del peticionario"""
     if request.method == 'GET':
         peticion = get_object_or_404(Peticion, radicado=radicado)
+        
+        # Verificar permisos de acceso
+        if not puede_ver_peticion(request.user, peticion):
+            return JsonResponse({'success': False, 'message': 'No tienes permiso para esta acción'})
         
         return JsonResponse({
             'success': True,
@@ -307,6 +345,7 @@ def obtener_datos_peticionario(request, radicado):
 # NUEVAS VISTAS PARA ASISTENTE IA
 # ========================================
 
+@login_required
 @csrf_exempt
 def iniciar_asistente_respuesta(request, radicado):
     """
@@ -315,6 +354,10 @@ def iniciar_asistente_respuesta(request, radicado):
     if request.method == 'POST':
         try:
             peticion = get_object_or_404(Peticion, radicado=radicado)
+            
+            # Verificar permisos de acceso
+            if not puede_ver_peticion(request.user, peticion):
+                return JsonResponse({'success': False, 'error': 'No tienes permiso para esta acción'})
             
             # Verificar que la petición tenga transcripción
             if not peticion.transcripcion_completa:
@@ -345,11 +388,17 @@ def iniciar_asistente_respuesta(request, radicado):
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 
+@login_required
 def mostrar_asistente_respuesta(request, radicado):
     """
     Muestra la interfaz del asistente con las preguntas generadas
     """
     peticion = get_object_or_404(Peticion, radicado=radicado)
+    
+    # Verificar permisos de acceso
+    if not puede_ver_peticion(request.user, peticion):
+        messages.error(request, 'No tienes permiso para acceder a esta petición.')
+        return redirect('index')
     
     # Obtener análisis de la sesión
     analisis = request.session.get(f'analisis_{radicado}')
@@ -366,6 +415,7 @@ def mostrar_asistente_respuesta(request, radicado):
     return render(request, 'peticiones/asistente_respuesta.html', context)
 
 
+@login_required
 @csrf_exempt
 def procesar_respuestas_asistente(request, radicado):
     """
@@ -374,6 +424,10 @@ def procesar_respuestas_asistente(request, radicado):
     if request.method == 'POST':
         try:
             peticion = get_object_or_404(Peticion, radicado=radicado)
+            
+            # Verificar permisos de acceso
+            if not puede_ver_peticion(request.user, peticion):
+                return JsonResponse({'success': False, 'error': 'No tienes permiso para esta acción'})
             
             # Obtener respuestas del formulario
             data = json.loads(request.body)
@@ -409,11 +463,17 @@ def procesar_respuestas_asistente(request, radicado):
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 
+@login_required
 def historial_asistente(request, radicado):
     """
     Muestra el historial de respuestas generadas por el asistente
     """
     peticion = get_object_or_404(Peticion, radicado=radicado)
+    
+    # Verificar permisos de acceso
+    if not puede_ver_peticion(request.user, peticion):
+        messages.error(request, 'No tienes permiso para acceder a esta petición.')
+        return redirect('index')
     
     # Aquí podrías implementar un modelo para guardar el historial
     # Por ahora, mostraremos la última respuesta de la sesión
@@ -425,6 +485,7 @@ def historial_asistente(request, radicado):
     return render(request, 'peticiones/historial_asistente.html', context)
 
 
+@login_required
 @csrf_exempt
 def descargar_respuesta_word(request, radicado):
     """
@@ -440,6 +501,10 @@ def descargar_respuesta_word(request, radicado):
             import os
             
             peticion = get_object_or_404(Peticion, radicado=radicado)
+            
+            # Verificar permisos de acceso
+            if not puede_ver_peticion(request.user, peticion):
+                return JsonResponse({'success': False, 'error': 'No tienes permiso para esta acción'})
             
             # Obtener el contenido de la respuesta del POST
             data = json.loads(request.body)

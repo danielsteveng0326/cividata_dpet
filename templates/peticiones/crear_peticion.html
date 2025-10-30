@@ -17,6 +17,14 @@
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
+                    <!-- Mostrar errores generales del formulario -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <strong>Errores:</strong>
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
                     <div class="alert alert-warning">
                         <i class="fas fa-calendar-alt"></i>
                         <strong>Importante:</strong> La fecha de radicación es obligatoria y determina los términos de vencimiento del derecho de petición.
@@ -29,6 +37,9 @@
                         También puede llenar algunos campos y dejar que la IA complete los faltantes.
                     </div>
                     
+                    <!-- Campo oculto dependencia (se asigna automáticamente del usuario) -->
+                    {{ form.dependencia }}
+                    
                     <!-- Fecha de Radicación -->
                     <fieldset class="mb-4">
                         <legend class="fs-5 border-bottom pb-2">Fecha de Radicación (Obligatoria)</legend>
@@ -36,6 +47,11 @@
                         <div class="mb-3">
                             {{ form.fecha_radicacion.label_tag }}
                             {{ form.fecha_radicacion }}
+                            {% if form.fecha_radicacion.errors %}
+                                <div class="text-danger">
+                                    {{ form.fecha_radicacion.errors }}
+                                </div>
+                            {% endif %}
                             <div class="form-text">
                                 <strong>Importante:</strong> Esta fecha determina los términos legales de respuesta del derecho de petición.
                             </div>
@@ -50,10 +66,16 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.peticionario_nombre.label_tag }}
                                 {{ form.peticionario_nombre }}
+                                {% if form.peticionario_nombre.errors %}
+                                    <div class="text-danger">{{ form.peticionario_nombre.errors }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.peticionario_id.label_tag }}
                                 {{ form.peticionario_id }}
+                                {% if form.peticionario_id.errors %}
+                                    <div class="text-danger">{{ form.peticionario_id.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -61,16 +83,25 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.peticionario_telefono.label_tag }}
                                 {{ form.peticionario_telefono }}
+                                {% if form.peticionario_telefono.errors %}
+                                    <div class="text-danger">{{ form.peticionario_telefono.errors }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.peticionario_correo.label_tag }}
                                 {{ form.peticionario_correo }}
+                                {% if form.peticionario_correo.errors %}
+                                    <div class="text-danger">{{ form.peticionario_correo.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             {{ form.peticionario_direccion.label_tag }}
                             {{ form.peticionario_direccion }}
+                            {% if form.peticionario_direccion.errors %}
+                                <div class="text-danger">{{ form.peticionario_direccion.errors }}</div>
+                            {% endif %}
                         </div>
                     </fieldset>
                     
@@ -81,6 +112,9 @@
                         <div class="mb-3">
                             {{ form.archivo_pdf.label_tag }}
                             {{ form.archivo_pdf }}
+                            {% if form.archivo_pdf.errors %}
+                                <div class="text-danger">{{ form.archivo_pdf.errors }}</div>
+                            {% endif %}
                             <div class="form-text">
                                 Archivo PDF del derecho de petición. Máximo 10MB.
                             </div>
@@ -89,6 +123,9 @@
                         <div class="mb-3">
                             {{ form.fuente.label_tag }}
                             {{ form.fuente }}
+                            {% if form.fuente.errors %}
+                                <div class="text-danger">{{ form.fuente.errors }}</div>
+                            {% endif %}
                             <div class="form-text">
                                 Indique cómo fue recibida la petición.
                             </div>
